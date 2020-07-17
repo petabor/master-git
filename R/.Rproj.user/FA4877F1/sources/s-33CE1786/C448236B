@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1593770935044.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "C448236B",
+    "lastKnownWriteTime" : 1594818705,
+    "last_content_update" : 1594818705874,
+    "path" : "~/R/MasterThesis/inference_analysisIdeas.R",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "339,0",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 12,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

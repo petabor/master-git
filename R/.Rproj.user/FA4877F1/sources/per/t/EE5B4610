@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1594743520549.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "EE5B4610",
+    "lastKnownWriteTime" : 23081149961273460,
+    "last_content_update" : 1594743520549,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "F6516DDF",
+        "caption" : "df_prem_middle_ts_wide",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=df_prem_middle_ts_wide&cache_key=F6516DDF",
+        "displayedObservations" : "12",
+        "environment" : "",
+        "object" : "df_prem_middle_ts_wide",
+        "preview" : "0",
+        "totalObservations" : "12",
+        "variables" : "16"
+    },
+    "relative_order" : 9,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

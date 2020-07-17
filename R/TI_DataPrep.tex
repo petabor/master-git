@@ -1,0 +1,494 @@
+\documentclass[]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+\else % if luatex or xelatex
+  \ifxetex
+    \usepackage{mathspec}
+  \else
+    \usepackage{fontspec}
+  \fi
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage[]{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\PassOptionsToPackage{hyphens}{url} % url is loaded by hyperref
+\usepackage[unicode=true]{hyperref}
+\hypersetup{
+            pdftitle={transitiveInference},
+            pdfauthor={Petra Borovska},
+            pdfborder={0 0 0},
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\IfFileExists{parskip.sty}{%
+\usepackage{parskip}
+}{% else
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+% Redefines (sub)paragraphs to behave more like sections
+\ifx\paragraph\undefined\else
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+\let\oldsubparagraph\subparagraph
+\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+% set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+
+
+\title{transitiveInference}
+\author{Petra Borovska}
+\date{21 June 2020}
+
+\begin{document}
+\maketitle
+
+\section{General Set Up}\label{general-set-up}
+
+clean environment and console
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{cat}\NormalTok{(}\StringTok{"}\CharTok{\textbackslash{}014}\StringTok{"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{rm}\NormalTok{(}\DataTypeTok{list =} \KeywordTok{ls}\NormalTok{())}
+\end{Highlighting}
+\end{Shaded}
+
+Installing all necessary packages for data preparation
+
+\section{Data Preparation}\label{data-preparation}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+Data preparation, loding data set, basic adjustments
+
+get current directory
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{here}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "C:/Users/ibm/Documents/Results/R"
+\end{verbatim}
+
+list the files in the desired direcotry
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{here}\NormalTok{(}\StringTok{"dataSets"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "C:/Users/ibm/Documents/Results/R/dataSets"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{list.files}\NormalTok{(}\KeywordTok{here}\NormalTok{(}\StringTok{"dataSets"}\NormalTok{))  ## just double check if it's correctly saved}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "pilotA_sleep_tr.csv"  "pilotA_sleep_tr.xlsx" "pilotA_sleep_ts.csv" 
+## [4] "pilotA_sleep_ts.xlsx" "pilotA_wake_tr.csv"   "pilotA_wake_tr.xlsx" 
+## [7] "pilotA_wake_ts.csv"   "pilotA_wake_ts.xlsx"
+\end{verbatim}
+
+load the data for each data set
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{tr_sleep <-}\StringTok{ }
+\StringTok{        }\KeywordTok{read.csv}\NormalTok{(}
+                \KeywordTok{here}\NormalTok{(}
+                        \StringTok{"dataSets"}\NormalTok{, }
+                        \StringTok{"pilotA_sleep_tr.csv"}
+\NormalTok{                )}
+\NormalTok{        )}
+
+\NormalTok{tr_wake <-}\StringTok{ }
+\StringTok{        }\KeywordTok{read.csv}\NormalTok{(}
+                \KeywordTok{here}\NormalTok{(}
+                        \StringTok{"dataSets"}\NormalTok{, }
+                        \StringTok{"pilotA_wake_tr.csv"}
+\NormalTok{                )}
+\NormalTok{        )}
+
+
+\NormalTok{test_sleep <-}\StringTok{ }
+\StringTok{        }\KeywordTok{read.csv}\NormalTok{(}
+                \KeywordTok{here}\NormalTok{(}
+                        \StringTok{"dataSets"}\NormalTok{, }
+                        \StringTok{"pilotA_sleep_ts.csv"}
+\NormalTok{                )}
+\NormalTok{        )}
+
+\NormalTok{test_wake <-}\StringTok{ }
+\StringTok{        }\KeywordTok{read.csv}\NormalTok{(}
+                \KeywordTok{here}\NormalTok{(}
+                        \StringTok{"dataSets"}\NormalTok{, }
+                        \StringTok{"pilotA_wake_ts.csv"}
+\NormalTok{                )}
+\NormalTok{        )}
+\end{Highlighting}
+\end{Shaded}
+
+look at the data
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{## show the data}
+\CommentTok{# tr_sleep}
+\CommentTok{# tr_wake}
+\CommentTok{# test_sleep}
+\CommentTok{# test_wake}
+\end{Highlighting}
+\end{Shaded}
+
+clean data, delete not useful rows from each data set Drop na only for
+testing, where the length of tibble is the same, not do for training, it
+varies and it will drop also useful rows
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{test_sleep =}\StringTok{ }\NormalTok{test_sleep }\OperatorTok{%>%}\StringTok{ }\KeywordTok{drop_na}\NormalTok{()}
+\NormalTok{test_wake =}\StringTok{ }\NormalTok{test_wake }\OperatorTok{%>%}\StringTok{ }\KeywordTok{drop_na}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{ts_sleep_R =}\StringTok{ }\NormalTok{test_sleep}
+\NormalTok{ts_wake_R =}\StringTok{ }\NormalTok{test_wake}
+\end{Highlighting}
+\end{Shaded}
+
+test\_wake with the most data, I guess use that need to get average from
+each pair then I need to switch participants columns with rows
+
+my columns are always:\\
+pairType \_condition\_token letterPos1 \_condition\_token letterPos2
+\_condition\_token key\_resp\_test.corr \_condition\_token \textless{}-
+that might be different name with training key\_resp\_test.rt
+\_condition\_token \textless{}- also might be different for training
+
+to calculate frequencies - total scores: premise 50 1deg 20 2deg 10
+anchor 10
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{premTot =}\StringTok{ }\DecValTok{50}
+\NormalTok{oneDegTot =}\StringTok{ }\DecValTok{20}
+\NormalTok{twoDegTot =}\StringTok{ }\DecValTok{10}
+\NormalTok{anchorTot =}\StringTok{ }\DecValTok{10}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{colName_w_ts =}
+\StringTok{        }\NormalTok{ts_wake_R }\OperatorTok{%>%}
+\StringTok{        }\KeywordTok{colnames}\NormalTok{(.)}
+\NormalTok{colNum_w_ts =}
+\StringTok{        }\NormalTok{ts_wake_R }\OperatorTok{%>%}
+\StringTok{        }\KeywordTok{ncol}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# ts_wake_6_select =}
+\CommentTok{#         ts_wake_R %>%}
+\CommentTok{#         select(}
+\CommentTok{#                 c(1:5)}
+\CommentTok{#         )}
+\CommentTok{#         }
+\CommentTok{# }
+\CommentTok{# ts_wake_6_multiple =}
+\CommentTok{#         ts_wake_6_select %>%}
+\CommentTok{#         group_by(}
+\CommentTok{#                 pairType_W_6}
+\CommentTok{#         ) %>%}
+\CommentTok{#         summarize(}
+\CommentTok{#                 tibble(}
+\CommentTok{#                 total_W_6 = sum(key_resp_test.corr_W_6), }
+\CommentTok{#                 rt_mean_W_6 = mean(key_resp_test.rt_W_6)}
+\CommentTok{#                 )}
+\CommentTok{#         ) %>%}
+\CommentTok{#         add_column(max_W_6 = c(10, 20, 50, 10))}
+\end{Highlighting}
+\end{Shaded}
+
+\section{Functions}\label{functions}
+
+write a funtion which gives me summary dfs, containing total number per
+pair type, mean rt per pair type and total number of pair types per
+group
+
+parameters that needs to be inserted: type of data set which columns
+from the data set, 5 columns for each participant - maybe create a range
+variables for each participant
+
+does not have to be insert as parameter, but need to be set up\\
+vary pair type - it's always first column of new data set, so replace
+the column name it does not have to vary proportion column, again
+replace by number - it does not have to vary mean column - again replace
+by number - it does not have to vary
+
+think about that when training - na s must be drop during the function
+call - when selection going on - so between step
+
+For the function is good to make copy
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{summary_subj_ts_f <-}\StringTok{ }\ControlFlowTok{function}\NormalTok{(dataSet, s, e)\{}
+        
+\NormalTok{        s =}\StringTok{ }\KeywordTok{as.integer}\NormalTok{(s)}
+\NormalTok{        e =}\StringTok{ }\KeywordTok{as.integer}\NormalTok{(e)}
+
+\NormalTok{        dataSet_select =}\StringTok{ }\NormalTok{dataSet[, }\KeywordTok{c}\NormalTok{(s}\OperatorTok{:}\NormalTok{e)]}
+\NormalTok{        dataSet_select =}\StringTok{ }\KeywordTok{as_tibble}\NormalTok{(dataSet_select)}
+        
+        
+\NormalTok{        origColNames =}\StringTok{ }\KeywordTok{colnames}\NormalTok{(dataSet_select)[}\KeywordTok{c}\NormalTok{(}\DecValTok{1}\NormalTok{, }\DecValTok{4}\NormalTok{, }\DecValTok{5}\NormalTok{)]}
+        
+        \KeywordTok{colnames}\NormalTok{(dataSet_select) <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"pairType"}\NormalTok{, }\StringTok{"letterPos1"}\NormalTok{, }\StringTok{"letterPos2"}\NormalTok{,}
+                                      \StringTok{"key_resp_test.corr"}\NormalTok{, }\StringTok{"key_resp_test.rt"}\NormalTok{)}
+        
+\NormalTok{        dataSet_multiple =}
+\StringTok{                }\NormalTok{dataSet_select }\OperatorTok{%>%}
+\StringTok{                }\KeywordTok{group_by}\NormalTok{(}
+\NormalTok{                        pairType}
+\NormalTok{                ) }\OperatorTok{%>%}
+\StringTok{                }\KeywordTok{summarize}\NormalTok{(}
+                        \KeywordTok{tibble}\NormalTok{(}
+                        \DataTypeTok{total_corr =} \KeywordTok{sum}\NormalTok{(key_resp_test.corr), }
+                        \DataTypeTok{mean_rt =} \KeywordTok{mean}\NormalTok{(key_resp_test.rt)}
+\NormalTok{                        )}
+\NormalTok{                )}
+
+        \KeywordTok{colnames}\NormalTok{(dataSet_multiple) <-}\StringTok{ }\NormalTok{origColNames}
+        
+        
+\NormalTok{        dataSet_multiple_t =}\StringTok{ }
+\StringTok{                }\NormalTok{dataSet_multiple }\OperatorTok{%>%}
+\StringTok{                }\KeywordTok{gather}\NormalTok{(}\DataTypeTok{key =}\NormalTok{ corr_cond_subj, }\DataTypeTok{value =}\NormalTok{ value, }\DecValTok{2}\OperatorTok{:}\KeywordTok{ncol}\NormalTok{(dataSet_multiple)) }\OperatorTok{%>%}\StringTok{ }
+\StringTok{                }\KeywordTok{spread_}\NormalTok{(}\DataTypeTok{key =} \KeywordTok{names}\NormalTok{(dataSet_multiple)[}\DecValTok{1}\NormalTok{],}\DataTypeTok{value =} \StringTok{'value'}\NormalTok{)}
+        
+        
+\NormalTok{        dataSet_multiple_t_head =}\StringTok{ }\KeywordTok{slice_head}\NormalTok{(dataSet_multiple_t)}
+\NormalTok{        dataSet_multiple_t_tail =}\StringTok{ }\KeywordTok{slice_tail}\NormalTok{(dataSet_multiple_t)}
+\NormalTok{        dataSet_multiple_t_less =}
+\StringTok{                }\NormalTok{dataSet_multiple_t_tail }\OperatorTok{%>%}
+\StringTok{                }\KeywordTok{select}\NormalTok{(}\OperatorTok{-}\DecValTok{1}\NormalTok{) }\OperatorTok{%>%}
+\StringTok{                }\KeywordTok{rename}\NormalTok{(}\DataTypeTok{anchor_rt =}\NormalTok{ anchor, }\DataTypeTok{oneDegree_rt =}\NormalTok{ oneDegree, }
+                       \DataTypeTok{premise_rt =}\NormalTok{ premise, }\DataTypeTok{twoDegree_rt =}\NormalTok{ twoDegree)}
+
+\NormalTok{        oneRowDf =}\StringTok{ }\KeywordTok{cbind}\NormalTok{(dataSet_multiple_t_head, dataSet_multiple_t_less)}
+        
+        \KeywordTok{return}\NormalTok{(oneRowDf)}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\section{Further Data Processing}\label{further-data-processing}
+
+Appliying the function. First getting number of columns for each data
+set, so I know how many participants we have - total / 5.
+
+Also getting name of the columns, so I know which tokens used = subject
+number.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{noCol_ts_W =}\StringTok{ }\KeywordTok{ncol}\NormalTok{(ts_wake_R)}
+\NormalTok{noCol_ts_S =}\StringTok{ }\KeywordTok{ncol}\NormalTok{(ts_sleep_R)}
+
+\NormalTok{noCol_ts_W    ## 20 columns / 5 = number of participants}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 20
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{noCol_ts_S    ## 10 columns / 5 = number of participants}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 10
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{namesCol_ts_W =}\StringTok{ }\KeywordTok{colnames}\NormalTok{(ts_wake_R)}
+\NormalTok{namesCol_ts_S =}\StringTok{ }\KeywordTok{colnames}\NormalTok{(ts_sleep_R)}
+
+\NormalTok{namesCol_ts_W}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##  [1] "pairType_W_6"            "letterPos1_W_6"         
+##  [3] "letterPos2_W_6"          "key_resp_test.corr_W_6" 
+##  [5] "key_resp_test.rt_W_6"    "pairType_W_9"           
+##  [7] "letterPos1_W_9"          "letterPos2_W_9"         
+##  [9] "key_resp_test.corr_W_9"  "key_resp_test.rt_W_9"   
+## [11] "pairType_W_11"           "letterPos1_W_11"        
+## [13] "letterPos2_W_11"         "key_resp_test.corr_W_11"
+## [15] "key_resp_test.rt_W_11"   "pairType_W_15"          
+## [17] "letterPos1_W_15"         "letterPos2_W_15"        
+## [19] "key_resp_test.corr_W_15" "key_resp_test.rt_W_15"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#  [1] "pairType_W_6"            "letterPos1_W_6"          "letterPos2_W_6"         }
+\CommentTok{#  [4] "key_resp_test.corr_W_6"  "key_resp_test.rt_W_6"    "pairType_W_9"           }
+\CommentTok{#  [7] "letterPos1_W_9"          "letterPos2_W_9"          "key_resp_test.corr_W_9" }
+\CommentTok{# [10] "key_resp_test.rt_W_9"    "pairType_W_11"           "letterPos1_W_11"        }
+\CommentTok{# [13] "letterPos2_W_11"         "key_resp_test.corr_W_11" "key_resp_test.rt_W_11"  }
+\CommentTok{# [16] "pairType_W_15"           "letterPos1_W_15"         "letterPos2_W_15"        }
+\CommentTok{# [19] "key_resp_test.corr_W_15" "key_resp_test.rt_W_15"}
+\CommentTok{# }
+
+\CommentTok{# tokens_W = 6, 9, 11, 15}
+
+\NormalTok{namesCol_ts_S}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##  [1] "pairType_S_7"           "letterPos1_S_7"         "letterPos2_S_7"        
+##  [4] "key_resp_test.corr_S_7" "key_resp_test.rt_S_7"   "pairType_S_8"          
+##  [7] "letterPos1_S_8"         "letterPos2_S_8"         "key_resp_test.corr_S_8"
+## [10] "key_resp_test.rt_S_8"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#  [1] "pairType_S_7"           "letterPos1_S_7"         "letterPos2_S_7"        }
+\CommentTok{#  [4] "key_resp_test.corr_S_7" "key_resp_test.rt_S_7"   "pairType_S_8"          }
+\CommentTok{#  [7] "letterPos1_S_8"         "letterPos2_S_8"         "key_resp_test.corr_S_8"}
+\CommentTok{# [10] "key_resp_test.rt_S_8"  }
+
+\CommentTok{# tokens_S = 7, 8}
+\end{Highlighting}
+\end{Shaded}
+
+Creating a df out of the function. Gives me total of corr responses per
+pair type and average rt per pair type. Then make a proportion out of it
+and combine those df, into one bigger df. Consider to write another
+function.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# ## wake testing}
+\CommentTok{# subj_6 = summary_subj_ts_f(ts_wake_R, 1, 5)}
+\CommentTok{# subj_9 = summary_subj_ts_f(ts_wake_R, 6, 10)}
+\CommentTok{# subj_11 = summary_subj_ts_f(ts_wake_R, 11, 15)}
+\CommentTok{# subj_15 = summary_subj_ts_f(ts_wake_R, 16, 20)}
+\CommentTok{# }
+\CommentTok{# ## sleep testing}
+\CommentTok{# subj_7 = summary_subj_ts_f(ts_sleep_R, 1, 5)}
+\CommentTok{# subj_8 = summary_subj_ts_f(ts_sleep_R, 6, 10)}
+\end{Highlighting}
+\end{Shaded}
+
+Now create a tibble out of those single outputs. First transpose rows
+and columns. \textless{}- that's already in the function Then add
+together. \textless{}- also in the function
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# df_ts = rbind(subj_6, subj_9, subj_11, subj_15, subj_7, subj_8)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\end{document}

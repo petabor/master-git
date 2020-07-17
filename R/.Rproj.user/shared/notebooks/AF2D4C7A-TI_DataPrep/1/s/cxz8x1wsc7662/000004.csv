@@ -1,0 +1,9 @@
+"0","## applying the function = fc_inf_prem_ts"
+"0","df_inf_prem_ts = fc_inf_prem_ts(ts_tot_trim)"
+"2","`summarise()` regrouping output by 'pairType', 'condition', 'participant' (override with `.groups` argument)
+"
+"2","`summarise()` regrouping output by 'participant', 'condition' (override with `.groups` argument)
+"
+"2","Joining, by = c(""pairType"", ""condition"", ""participant"", ""trBlocks"", ""tot"", ""n"", ""rt_avg"", ""prop"")
+"
+"0","head(df_inf_prem_ts)"

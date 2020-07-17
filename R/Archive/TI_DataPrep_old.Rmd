@@ -1,0 +1,641 @@
+---
+title: "TI_DataPrep_old"
+author: "Petra Borovska"
+date: "1 července 2020"
+output: html_document
+---
+
+
+html_chapters()
+
+# General Set Up
+
+
+clean environment and console
+
+```{r clean_console}
+cat("\014")
+```
+
+
+
+```{r clean_envir}
+rm(list = ls())
+```
+
+
+
+Installing all necessary packages for data preparation 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# ## install packages
+# install.packages("knitr")
+# install.packages("devtools")
+# install.packages("here")
+# install.packages("tidyverse")
+# devtools::install_github("hadley/emo")
+# install.packages("viridis")
+# devtools::install_github("mikabr/ggpirate")
+# install.packages("afex")
+# install.packages("bootES")
+# install.packages("readr")
+
+
+## load packages
+library(knitr)
+library(devtools)
+library(here)
+library(tidyverse)
+library(emo)
+library(viridis)
+library(ggpirate)
+library(afex)
+library(emmeans)
+library(multcomp)
+library(bootES)
+library(broom)
+library(readr)
+
+
+
+```
+
+
+
+
+
+
+
+# Data Preparation
+
+
+
+
+Data preparation, loding data set, basic adjustments
+
+
+get current directory
+
+```{r base_dir}
+
+here()
+
+
+```
+
+
+list the files in the desired direcotry
+
+```{r list_files}
+
+here("dataSets")
+list.files(here("dataSets"))  ## just double check if it's correctly saved
+
+```
+
+
+
+
+load the data for each data set
+
+```{r load_data}
+tr_sleep <- 
+        read.csv(
+                here(
+                        "dataSets", 
+                        "pilotA_sleep_tr.csv"
+                )
+        )
+
+tr_wake <- 
+        read.csv(
+                here(
+                        "dataSets", 
+                        "pilotA_wake_tr.csv"
+                )
+        )
+
+
+test_sleep <- 
+        read.csv(
+                here(
+                        "dataSets", 
+                        "pilotA_sleep_ts.csv"
+                )
+        )
+
+test_wake <- 
+        read.csv(
+                here(
+                        "dataSets", 
+                        "pilotA_wake_ts.csv"
+                )
+        )
+```
+
+
+
+look at the data 
+
+
+```{r show_data}
+
+## show the data
+# tr_sleep
+# tr_wake
+# test_sleep
+# test_wake
+
+```
+
+
+clean data, delete not useful rows from each data set
+Drop na only for testing, where the length of tibble is the same, not do for training, it varies
+and it will drop also useful rows
+
+```{r delete_empty}
+
+
+test_sleep = test_sleep %>% drop_na()
+test_wake = test_wake %>% drop_na()
+
+```
+
+```{r make_copy}
+
+ts_sleep_R = test_sleep
+ts_wake_R = test_wake
+
+```
+
+test_wake with the most data, I guess use that
+need to get average from each pair
+then I need to switch participants columns with rows
+
+my columns are always:  
+        pairType                _condition_token
+        letterPos1              _condition_token
+        letterPos2              _condition_token
+        key_resp_test.corr      _condition_token    <- that might be different name with training
+        key_resp_test.rt        _condition_token    <- also might be different for training
+
+
+to calculate frequencies - total scores:
+        premise   50
+        1deg      20
+        2deg      10
+        anchor    10
+        
+
+
+
+```{r col_info}
+colName_w_ts =
+        ts_wake_R %>%
+        colnames(.)
+colNum_w_ts =
+        ts_wake_R %>%
+        ncol()
+
+```
+
+
+
+```{r summaryPerSubject}
+# ts_wake_6_select =
+#         ts_wake_R %>%
+#         select(
+#                 c(1:5)
+#         )
+#         
+# 
+# ts_wake_6_multiple =
+#         ts_wake_6_select %>%
+#         group_by(
+#                 pairType_W_6
+#         ) %>%
+#         summarize(
+#                 tibble(
+#                 total_W_6 = sum(key_resp_test.corr_W_6), 
+#                 rt_mean_W_6 = mean(key_resp_test.rt_W_6)
+#                 )
+#         ) %>%
+#         add_column(max_W_6 = c(10, 20, 50, 10))
+
+```
+
+
+
+# Functions
+
+
+write a funtion which gives me summary dfs, containing total number per pair type, mean rt per pair type
+and total number of pair types per group
+
+
+parameters that needs to be inserted:
+        type of data set
+        which columns from the data set, 5 columns for each participant - maybe create a range variables 
+                for each participant
+                
+
+does not have to be insert as parameter, but need to be set up                
+        vary pair type - it's always first column of new data set, so replace the column name
+                it does not have to vary
+        proportion column, again replace by number - it does not have to vary
+        mean column - again replace by number - it does not have to vary
+
+
+think about that when training - na s must be drop during the function call - when selection
+        going on - so between step
+
+For the function is good to make copy
+
+
+
+```{r summaryPerSubject_function}
+
+
+summary_subj_ts_f <- function(dataSet, s, e){
+        
+        s = as.integer(s)
+        e = as.integer(e)
+
+        dataSet_select = dataSet[, c(s:e)]
+        dataSet_select = as_tibble(dataSet_select)
+        
+        
+        origColNames = colnames(dataSet_select)[c(1, 4, 5)]
+        
+        colnames(dataSet_select) <- c("pairType", "letterPos1", "letterPos2",
+                                      "key_resp_test.corr", "key_resp_test.rt")
+        
+        dataSet_multiple =
+                dataSet_select %>%
+                group_by(
+                        pairType
+                ) %>%
+                summarize(
+                        tibble(
+                        total_corr = sum(key_resp_test.corr), 
+                        mean_rt = mean(key_resp_test.rt)
+                        )
+                )
+
+        colnames(dataSet_multiple) <- origColNames
+        
+        
+        dataSet_multiple_t = 
+                dataSet_multiple %>%
+                gather(key = corr_cond_subj, value = value, 2:ncol(dataSet_multiple)) %>% 
+                spread_(key = names(dataSet_multiple)[1],value = 'value')
+        
+        
+        dataSet_multiple_t_head = slice_head(dataSet_multiple_t)
+        dataSet_multiple_t_tail = slice_tail(dataSet_multiple_t)
+        dataSet_multiple_t_less =
+                dataSet_multiple_t_tail %>%
+                dplyr::select(-1) %>%
+                rename(anchor_rt = anchor, oneDegree_rt = oneDegree, 
+                       premise_rt = premise, twoDegree_rt = twoDegree)
+
+        oneRowDf = cbind(dataSet_multiple_t_head, dataSet_multiple_t_less)
+        
+        return(oneRowDf)
+}
+
+
+
+
+
+```
+
+
+# Further Data Processing
+
+
+Appliying the function.
+First getting number of columns for each data set, 
+so I know how many participants we have - total / 5.
+
+
+Also getting name of the columns, so I know which tokens used = subject number.
+
+```{r info_subj_number}
+
+noCol_ts_W = ncol(ts_wake_R)
+noCol_ts_S = ncol(ts_sleep_R)
+
+noCol_ts_W    ## 25 columns / 5 = number of participants
+noCol_ts_S    ## 20 columns / 5 = number of participants
+
+namesCol_ts_W = colnames(ts_wake_R)
+namesCol_ts_S = colnames(ts_sleep_R)
+
+namesCol_ts_W
+# tokens_W = 6, 9, 11, 15, 17
+
+namesCol_ts_S
+# tokens_S = 7, 8, 18, 19
+
+
+```
+
+
+Creating a df out of the function. 
+Gives me total of corr responses per pair type and average rt per pair type.
+Then make a proportion out of it and combine those df, into one bigger df.
+Consider to write another function.
+
+
+```{r apply_function_summary_subj_f}
+
+## wake testing
+subj_6 = summary_subj_ts_f(ts_wake_R, 1, 5)
+subj_9 = summary_subj_ts_f(ts_wake_R, 6, 10)
+subj_11 = summary_subj_ts_f(ts_wake_R, 11, 15)
+subj_15 = summary_subj_ts_f(ts_wake_R, 16, 20)
+subj_17 = summary_subj_ts_f(ts_wake_R, 21, 25)
+
+
+## sleep testing
+subj_7 = summary_subj_ts_f(ts_sleep_R, 1, 5)
+subj_8 = summary_subj_ts_f(ts_sleep_R, 6, 10)
+subj_18 = summary_subj_ts_f(ts_sleep_R, 11, 15)
+subj_19 = summary_subj_ts_f(ts_sleep_R, 16, 20)
+
+```
+
+
+Now create a tibble out of those single outputs. 
+First transpose rows and columns. <- that's already in the function
+Then add together. <- also in the function
+
+
+In the *** df_ts *** always update subject. A bit un elegant, 
+but it's not that bad, I won't have more than 100 participants. 
+
+
+```{r concat_tibble}
+
+df_ts = rbind(subj_6, subj_9, subj_11, subj_15, subj_17, subj_7, subj_8, subj_18, subj_19)
+
+```
+
+
+Split the column with info on subj and conditon
+Getting wide format. 
+In order to get longer, transform data below.
+Don't forget to change the levels into factors.
+
+
+```{r totals_pairType}
+premTot = 50
+oneDegTot = 20
+twoDegTot = 10
+anchorTot = 10
+```
+
+
+
+
+```{r split_col_ts}
+
+## complete df
+df_ts_sep <- 
+        df_ts %>%
+        separate(
+                corr_cond_subj,
+                c("forDel1", "forDel2", "forDel3", "response", "condition", "subjNr")
+        ) %>%
+        dplyr::select(
+                -c(1:4)
+        ) %>%
+        mutate(
+                anchor_prop = anchor/anchorTot,
+                oneDegree_prop = oneDegree/oneDegTot,
+                premise_prop = premise/premTot, 
+                twoDegree_prop = twoDegree/twoDegTot
+        ) %>%
+        rowwise() %>%
+        mutate(
+                inference_prop = mean(c(oneDegree_prop, twoDegree_prop))
+        )
+
+
+```
+
+```{r excel_csv_df_ts_sep}
+
+write_csv(
+        df_ts_sep,
+        here("outputFiles_R", "full_basicPairType_prop.csv")
+)
+
+```
+
+
+
+```{r getting_longFormat}
+recode_long <-
+        df_ts_sep %>%
+        pivot_longer(
+                cols = c(anchor, oneDegree, premise, twoDegree),
+                names_to = "cond",
+                values_to = "proportion"
+        )
+
+## make factor out of cond
+recode_long$cond = as.factor(recode_long$cond)
+
+## verify
+class(recode_long$cond)
+
+```
+
+
+
+
+
+For more detailed analysis on premise pair type only.
+This is very ugly function
+
+```{r copy_data}
+copy_test_sleep = test_sleep
+copy_test_wake = test_wake
+```
+
+
+```{r prepare_df_detailpairs}
+
+
+
+summary_subj_ts_pairType_f <- function(dataSet_pair, l, u){
+        
+        l = as.integer(l)
+        u = as.integer(u)
+        
+        oneSub_select <- 
+        dataSet_pair %>%
+        dplyr::select(
+               l:u 
+        )
+        
+        origColNames = colnames(oneSub_select)[c(1:4)]
+
+        colnames(oneSub_select) <- c("pairType", "letterPos1", "letterPos2",
+                                      "key_resp_test.corr")
+
+
+        
+        dataSet_pair_filter <-
+                oneSub_select %>%
+                filter(
+                        pairType == "premise" | pairType == "oneDegree" |
+                                pairType == "twoDegree"
+                )
+        
+        BC <-
+                dataSet_pair_filter %>%
+                filter(
+                        letterPos1 == "B" & letterPos2 == "C" |
+                                letterPos1 == "C" & letterPos2 == "B"
+                ) %>%
+                summarise(
+                        tibble(
+                                BC = sum(key_resp_test.corr)
+                        )
+                ) %>%
+                gather(key = pair_cond_subj, value = value)
+        CD <-
+                dataSet_pair_filter %>%
+                filter(
+                        letterPos1 == "C" & letterPos2 == "D" |
+                                letterPos1 == "D" & letterPos2 == "C"
+                ) %>%
+                summarise(
+                        tibble(
+                                CD = sum(key_resp_test.corr)
+                        )
+                ) %>%
+                gather(key = pair_cond_subj, value = value)
+        DE <-
+                dataSet_pair_filter %>%
+                filter(
+                        letterPos1 == "D" & letterPos2 == "E" |
+                                letterPos1 == "E" & letterPos2 == "D"
+                ) %>%
+                summarise(
+                        tibble(
+                                DE = sum(key_resp_test.corr)
+                        )
+                ) %>%
+                gather(key = pair_cond_subj, value = value)
+        BD <-
+                dataSet_pair_filter %>%
+                filter(
+                        letterPos1 == "B" & letterPos2 == "D" |
+                                letterPos1 == "D" & letterPos2 == "B"
+                ) %>%
+                summarise(
+                        tibble(
+                                BD = sum(key_resp_test.corr)
+                        )
+                ) %>%
+                gather(key = pair_cond_subj, value = value)
+        CE <-
+                dataSet_pair_filter %>%
+                filter(
+                        letterPos1 == "C" & letterPos2 == "E" |
+                                letterPos1 == "E" & letterPos2 == "C"
+                ) %>%
+                summarise(
+                        tibble(
+                                CE = sum(key_resp_test.corr)
+                        )
+                ) %>%
+                gather(key = pair_cond_subj, value = value)
+        BE <-
+                dataSet_pair_filter %>%
+                filter(
+                        letterPos1 == "B" & letterPos2 == "E" |
+                                letterPos1 == "E" & letterPos2 == "B"
+                ) %>%
+                summarise(
+                        tibble(
+                                BE = sum(key_resp_test.corr)
+                        )
+                ) %>%
+                gather(key = pair_cond_subj, value = value)
+
+
+        pairType_df_ts = rbind(CD, CD, DE,
+                               BD, CE, BE)
+
+        pairType_df_ts_rename <-
+                pairType_df_ts %>%
+                add_column(
+                pairLetter_subj = c(origColNames[1], origColNames[1], origColNames[1],
+                                    origColNames[1], origColNames[1], origColNames[1]), 
+                .before = "value"
+        ) %>%
+                separate(
+                pairLetter_subj,
+                c("forDel1", "condition", "subjNr")) %>% 
+                dplyr::select(
+                        -2
+                        )
+
+        
+        return(pairType_df_ts_rename)
+                
+        
+}
+
+
+```
+
+
+Getting info on tokens for detailed tibble with each premise pair.
+
+```{r info_column_pair}
+
+colNames_ts_sleep_pair = colnames(copy_test_sleep)
+colNames_ts_wake_pair = colnames(copy_test_wake)
+
+
+colNum_ts_sleep_pair = ncol(copy_test_sleep)    ## 10
+colNum_ts_wake_pair = ncol(copy_test_wake)      ## 20
+
+```
+
+
+
+
+```{r apply_f}
+
+subj_8_pair = summary_subj_ts_pairType_f(copy_test_sleep, 1, 4)
+subj_7_pair = summary_subj_ts_pairType_f(copy_test_sleep, 6, 9)
+
+
+subj_6_pair = summary_subj_ts_pairType_f(copy_test_wake, 1, 4)
+subj_9_pair = summary_subj_ts_pairType_f(copy_test_wake, 6, 9)
+subj_11_pair = summary_subj_ts_pairType_f(copy_test_wake, 11, 14)
+subje_15_pair = summary_subj_ts_pairType_f(copy_test_wake, 16, 19)
+
+
+
+```
+
+```{r final_df_pair}
+
+df_ts_pair= rbind(subj_6_pair, subj_9_pair, subj_11_pair, subje_15_pair, subj_7_pair, subj_8_pair)
+
+
+```
+
+
+
+

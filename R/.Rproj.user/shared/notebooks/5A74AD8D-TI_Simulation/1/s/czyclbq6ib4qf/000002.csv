@@ -1,0 +1,8 @@
+"0","## selecting participants, so it's balanced in conditions"
+"0","ts_first_selected ="
+"0","        df_inf_prem_ts %>%"
+"0","        filter("
+"0","                participant == ""7"" | participant == ""8"" | participant == ""18"" |"
+"0","                        participant == ""19"" | participant == ""17"" | participant == ""15"" |"
+"0","                        participant == ""20"" | participant == ""21"""
+"0","        )"

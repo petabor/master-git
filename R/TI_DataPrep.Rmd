@@ -1,0 +1,964 @@
+---
+title: "Transitive Inference: Data Handling"
+author: "Petra Borovska"
+date: "21 June 2020"
+output:
+        html_document:
+                toc: true
+                toc_float:
+                        collapsed: false
+                        smooth_scroll: false
+                theme: flatly
+                
+
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r packages, include=FALSE}
+
+# ## install packages
+# install.packages("knitr")
+# install.packages("devtools")
+# install.packages("here")
+# install.packages("tidyverse")
+# devtools::install_github("hadley/emo")
+# install.packages("viridis")
+# devtools::install_github("mikabr/ggpirate")
+# install.packages("afex")
+# install.packages("bootES")
+# install.packages("readr")
+# install.packages("blockrand")
+
+
+## load packages
+library(knitr)
+library(devtools)
+library(here)
+library(tidyverse)
+library(emo)
+library(viridis)
+library(ggpirate)
+library(afex)
+library(emmeans)
+library(multcomp)
+library(bootES)
+library(broom)
+library(readr)
+library(blockrand)
+
+```
+
+
+***Update R***
+```{r update}
+# install.packages("installr")
+# library(installr)
+# updateR()
+
+```
+
+
+
+### Clean environment and console
+
+```{r clean_console}
+cat("\014")
+```
+
+```{r clean_envir}
+rm(list = ls())
+```
+
+
+
+
+
+
+**What needs to be done**     
+
+
+Notes:   
+Load data from each participant.  
+Both condition - add condition - if W or S   
+Create df out of it.  
+Select only relevant columns.  
+Add column with token, nr of block,   
+
+
+### Structure
+
+* **Loading functions - *'Functions.R'* **
+* **Loading appropriate files**    
+        + Token files   
+        + Files for training and testing   
+        
+* **Training Data**        
+* Divide training mandatory and criterion  
+* Select appropriate columns  
+* Join both and sort by participant number (important for later block adding)  
+* Add block number  
+        + Filter count of number of participant divided by 10 to get raw number   
+        + Add the column to training set   
+* Add condition to training set (based on token list)   
+* Add type of block - mandatory or criterion   
+* Show the first rows of the data set  
+
+
+* **Testing Data**       
+* Select appropriate columns   
+* Add block number   
+        + Filter count of number of participant divided by 10 to get raw number   
+        + Add the column to training set   
+* Add condition to training set (based on token list)
+* Show the first rows of the data set
+
+* Add number of blocks from training to testing set
+
+
+* **Subsetting *(using function from separate script)* **   
+        + inference and premise     
+        + one degree and two degree   
+        + only middle pairs - 1. averaged, 2. individual pair type   
+
+
+* **Simulated data**
+
+* **Randomization of participants to groups**
+
+* **Exporting data**
+
+
+
+
+
+
+**Loading functions**
+
+```{r shared-code}
+
+source(here::here("/Functions.R"))
+
+```
+
+
+```{r dir}
+
+# here()
+# list.files()
+getwd()
+
+```
+
+```{r locateFiles}
+
+filesLoc = here("dataSets")
+lsFiles = list.files(filesLoc)
+
+```
+
+## Loading appropriate files
+
+### 1. Token files - gives me condition affiliation.
+
+```{r load_tokenFile}
+
+tokenFile = read.csv("C:/Users/ibm/Documents/Results/listOfParticipants_token&URLs.csv")
+
+tokenFile_sel = 
+        tokenFile %>%
+        dplyr::select(
+                token_LS,
+                Condition
+                )
+
+## looking at the token file, sorting it
+tokenFile_sel_clean <- 
+        tokenFile_sel %>%
+        filter(Condition == "wake" | Condition == "sleep") %>%
+        arrange(token_LS)
+
+## pulling just token number for wake
+subj_wake =
+        tokenFile_sel_clean %>%
+        filter(Condition == "wake") %>%
+        pull(token_LS)
+
+## pulling token number for sleep
+subj_sleep = 
+        tokenFile_sel_clean %>%
+        filter(Condition == "sleep") %>%
+        pull(token_LS)
+
+
+```
+
+
+### 2. Files for training and testing
+
+Training = ts_tot
+Testing = tr_tot
+
+Load files for training and testing.
+Both condition in the data set. 
+Swipping done in python.
+
+```{r load_files}
+ts_tot = read.csv(here("dataSets", "ts_tot.csv"))
+tr_tot = read.csv(here("dataSets", "tr_tot.csv"))
+```
+
+### Further goals
+
+Adjust the data.
+Add block number to each data set. <- done 
+Results will be in long format. 
+Add also condition affiliation based on token file above. <- done
+
+
+## Training Data
+
+Clean the training data first.
+
+Divide data set into first 3 or 5 blocks and criterion blocks.
+Select appropriate columns:
+        X, key_resp_Bl.corr, key_resp_Bl.rt, letterPos1, letterPos2, participant
+Delete empty rows in each.
+Merge those two again and sort by participant.
+
+
+
+```{r tr_clean}
+
+## get info on columns
+columnNames_tr = colnames(tr_tot)
+
+## firts data set with first 3 or 5 blocks
+df_tr_Bl = 
+        tr_tot %>%
+        dplyr::select(
+                X, key_resp_Bl.corr, key_resp_Bl.rt, letterPos1, letterPos2, 
+                participant
+        ) %>%
+        drop_na()
+
+
+## second data set - criterion
+df_tr_Cr =
+        tr_tot %>%
+        dplyr::select(
+                X, key_resp_Criterion.corr, key_resp_Criterion.rt, letterPos1, 
+                letterPos2, participant
+        ) %>%
+        drop_na() %>%
+        rename(key_resp_Bl.corr = key_resp_Criterion.corr, 
+               key_resp_Bl.rt = key_resp_Criterion.rt)
+        
+## join mandatory blocks and criterion and sort by participant
+tr_tot_trim = 
+        df_tr_Bl %>%
+        full_join(df_tr_Cr) %>%
+        arrange(participant)
+        
+
+```
+
+Data set until now: tr_tot_trim
+Add nr of blocks. 
+
+
+
+```{r add_blockNr}
+
+
+## create table that gives me summary of number of blocks per participant
+tb = table(tr_tot_trim$participant)
+
+## get just clean numbers in lenght of the table - participant repectively
+tb2 = 0
+for(i in 1:length(tb)){
+        tb2[i] = tb[i]/10
+}
+
+## replicate numbers based on participant lenght and values in table
+## those representing number of blocks, e.g. 32 will be replicated each by 10
+## so 1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2 .. 32,32,32,32,32,32,32,32,32,32
+bl_nr = 0
+for(i in 1:length(tb2)){
+        bl_nr = append(bl_nr, rep(1:tb2[i], each = 10))
+}
+
+## because of the loop 0 was added at the beginning - get rid of it
+bl_nr = bl_nr[-1]
+
+## add the column to final data set
+tr_tot_trim <-
+        tr_tot_trim %>%
+        add_column(blockNr = bl_nr)
+```
+
+
+
+
+Add column with condition to training data.
+```{r addint_condition_tr}
+
+## using token data also for training
+subj_wake
+subj_sleep
+
+## creating columns with condition
+cond_tr = ifelse(tr_tot_trim$participant %in% subj_wake, "wake", "sleep")
+
+
+## adding column with condition
+tr_tot_trim <-
+        tr_tot_trim %>%
+        add_column(condition = cond_tr)
+
+
+
+```
+
+Add column with which block is the training and which block is criterion
+categories:
+        1. mandatory
+        2. criterion
+        
+This won't be used for block 3 or adjusted further. Wait for pilot data.
+
+```{r column_typeBl}
+
+
+## variable for criterion
+blCriterion_5bl = c(1,2,3,4,5)  ## can be changed - so e.g. for the 3 bl, could be adjusted
+                                ## in that case separate data set to 3bl and 5bl training
+blCriterion_3bl =  c(1, 2, 3)
+
+
+## variable for token which are in 3bl or 5bl
+bl3_token = c(6,7,8,9,11,15)
+bl5_token = c(16,17,18,19,20,21)
+
+
+## for loop for creating the column if 3 block mandatory or 5 blocks mandatory
+blType = integer()
+for(i in 1:length(tr_tot_trim$participant)){
+        if(tr_tot_trim$participant[i] %in% bl3_token){
+                if(tr_tot_trim$blockNr[i] %in% blCriterion_3bl){
+                        blType[i] = "mandatory"
+                        } else {
+                                blType[i] = "criterion"
+                        }
+        } else if(tr_tot_trim$participant[i] %in% bl5_token){
+                        if(tr_tot_trim$blockNr[i] %in% blCriterion_5bl){
+                                blType[i] = "mandatory"
+                        } else {
+                                blType[i] = "criterion"
+                        }
+                } 
+}
+
+## add column for block type
+tr_tot_trim = 
+        tr_tot_trim %>%
+        add_column(
+                blockType = blType
+        )
+
+```
+
+Training data - ***tr_tot_trim***
+```{r trainingDataSet_lookingAtHead}
+
+head(tr_tot_trim)
+
+```
+
+
+
+## Testing Data
+
+Do the same for testing data 
+```{r ts_clean}
+
+## get column names
+colNames_ts_tot = colnames(ts_tot)
+
+## select appropriate columns
+ts_tot_trim = 
+        ts_tot %>%
+        dplyr::select(
+                X, key_resp_test.corr, key_resp_test.rt, letterPos1, 
+                letterPos2, pairType, participant
+        ) %>%
+        drop_na() %>%
+        arrange(participant)
+
+```
+
+
+```{r add_blockNr_ts}
+
+## nr of blocks and trials
+nrBl = 5
+trial = 18
+
+
+## sequence of blocks for one participant
+onePart = rep(1:nrBl, each = trial)
+
+## replicated by number of participants
+## nrParticipants = length of the df divided by nr of trials * nr of blocks
+blCol = rep(onePart, times=length(ts_tot_trim$participant)/(nrBl*trial))
+
+
+## adding the number of blocks to total df - ts
+ts_tot_trim =
+        ts_tot_trim %>%
+        add_column(blockNr = blCol)
+
+```
+
+
+## Adding condition 
+
+Based on my token file. 
+Data set = tokenFile_sel
+
+
+```{r adding_condition_ts}
+
+## creating columns with condition
+cond = ifelse(ts_tot_trim$participant %in% subj_wake, "wake", "sleep")
+
+## adding column with condition
+ts_tot_trim <-
+        ts_tot_trim %>%
+        add_column(condition = cond)
+
+```
+
+
+**Adding info from training data set about blocks**
+
+```{r add_blockTrainingToTesting}
+
+## get subset of number of blocks per participant
+bl = 
+        tr_tot_trim %>%
+        group_by(
+                participant
+        ) %>%
+        dplyr::summarise(
+                max =  max(blockNr)
+        )
+
+## create a column with maximum number of blocks from training 
+repBl = integer()
+for(i in 1:length(bl$participant)){
+        if(bl$participant[i] %in% tr_tot_trim$participant){
+                repBl = append(repBl,rep(bl$max[i], times = 
+                                       length(ts_tot_trim[ts_tot_trim$participant ==
+                                                bl$participant[i],]$participant)))
+        }
+}
+
+## adding the column to testing data set
+ts_tot_trim =
+        ts_tot_trim %>%
+        add_column(
+                trBlocks = repBl
+        )
+
+
+```
+
+
+**Look at head of the cleaned testing data**
+
+```{r testingData_lookingAtHead}
+
+head(ts_tot_trim)
+
+```
+
+
+
+### Subsetting
+
+
+**Data set for inference and premise**
+
+```{r applyFunction_fc_inf_prem_ts}
+
+## applying the function = fc_inf_prem_ts
+df_inf_prem_ts = fc_inf_prem_ts(ts_tot_trim)
+head(df_inf_prem_ts)
+
+
+```
+
+
+**Data set for 1 deg and 2 degree**
+
+```{r applyFunction_fc_deg_ts}
+
+## applying the function = fc_deg_ts
+df_deg_ts = fc_deg_ts(ts_tot_trim)
+head(df_deg_ts)
+
+```
+
+
+**Data set for inf and prem - prem only middle pairs**
+
+```{r applyFunction_fc_inf_premMiddle_ts}
+
+## applying the function = df_prem_middle_ts
+df_prem_middle_ts = fc_inf_premMiddle_ts(ts_tot_trim)
+head(df_prem_middle_ts)
+
+
+## wide format of individual pairs - if I want to explore closer the types
+## proportions calculated for individual pair from total number of blocks
+df_prem_middle_ts_wide_each =
+        df_prem_middle_ts %>%
+        dplyr::select(-c(pairType, tot, rt_avg)) %>%
+        group_by(participant) %>%
+        dplyr::mutate(temp = 1:n()) %>%
+        unite(combi, lettPos, temp) %>%
+        spread(combi, prop)
+
+
+## wide format for middle premise pairs and inference, averaged together 
+df_prem_middle_ts_wide_avg =
+        df_prem_middle_ts %>%
+        dplyr::select(-c(lettPos, prop, rt_avg)) %>%
+        group_by(participant, pairType, condition) %>%
+        dplyr::summarise(
+                tot = sum(tot),
+                n = sum(n)
+        ) %>%
+        dplyr::mutate(prop = tot/n) %>%
+        dplyr::select(-c(tot, n)) %>%
+        spread(pairType, prop)
+
+
+
+```
+
+
+
+### Simulated data
+
+```{r simData}
+
+## sd total
+sd_tot =
+        df_inf_prem_ts %>%
+        dplyr::summarise(
+                sd_tot = sd(prop)
+        ) %>%
+        pull()
+
+
+## creating the tresholds for each group - vary then
+w_prem_th = 0.98
+w_inf_th = 0.55
+s_prem_th = 0.98
+s_inf_th = 0.85
+
+## double checking means
+mean_w_prem = 0
+mean_w_inf = 0
+mean_s_prem = 0
+mean_s_inf = 0
+
+
+## loop paramaters
+nr_sim = 200
+p_value = 0
+set.seed(123)
+
+## parameters
+nuSubj = 40
+nrCond_bet = 2
+nrCond_wth = 2
+cond_bet = c("wake", "sleep")
+cond_wth = c("premise", "inference")
+myData = tibble()
+
+for(j in 1:nr_sim){
+
+        
+        ## subject
+        subject = rep(1:nuSubj, times = nrCond_bet)
+        ## create IV within
+        pair = rep(cond_wth, times = nuSubj)
+        ## create IV between
+        cond = rep(cond_bet, each = nrCond_bet, times = nuSubj/nrCond_bet)
+        
+        ## create empty tibble (to reset previous)
+        myData = tibble(condition = cond, pairType = pair)
+        
+        ## arrange to pair type and condition so the dv is added appropriately
+        myData =
+                myData %>%
+                arrange(
+                        pairType,
+                        condition
+                )
+        
+        ## creating a sample of each treshold
+        ## random sample with mean and sd from pilot data in range 0 and 1
+        w_inf = rnorm(nuSubj/nrCond_bet, w_inf_th, sd_tot)
+        for(a in 1:length(w_inf)){
+                #print(w_inf[i])
+                if(w_inf[a] >= 1){
+                        w_inf[a] = 1
+                } else if(w_inf[a] <= 0){
+                        w_inf[a] = 0
+                }
+        }
+        
+        
+        w_prem = rnorm(nuSubj/nrCond_bet, w_prem_th, sd_tot)
+        for(b in 1:length(w_prem)){
+                #print(w_inf[i])
+                if(w_prem[b] >= 1){
+                        w_prem[b] = 1
+                } else if(w_inf[b] <= 0){
+                        w_prem[b] = 0
+                }
+        }
+        
+        
+        s_inf = rnorm(nuSubj/nrCond_bet, s_inf_th, sd_tot)
+        for(c in 1:length(s_inf)){
+                #print(w_inf[i])
+                if(s_inf[c] >= 1){
+                        s_inf[c] = 1
+                } else if(w_inf[c] <= 0){
+                        s_inf[c] = 0
+                }
+        }
+        
+        
+        s_prem = rnorm(nuSubj/nrCond_bet, s_prem_th, sd_tot)
+        for(d in 1:length(s_prem)){
+                #print(w_inf[i])
+                if(s_prem[d] >= 1){
+                        s_prem[d] = 1
+                } else if(s_prem[d] <= 0){
+                        s_prem[d] = 0
+                }
+        }
+
+        
+        ## performance bind - the order is dependent on the arrangment before
+        perf = c(s_inf, w_inf, s_prem, w_prem)
+        
+        ## add performance
+        myData <- 
+                myData %>%
+                add_column(
+                        perf = perf, .after = "pairType"
+                ) 
+        
+        # convert to factor
+        myData <- 
+                myData %>%
+                add_column(
+                        subject = subject, .before = "condition"
+                ) %>%
+                mutate(
+                        subject = as.factor(subject),
+                        pairType = as.factor(pairType),
+                        condition = as.factor(condition)
+                        )
+}
+```
+
+
+
+
+
+
+### Randomization of participants
+
+```{r blockRandom}
+
+## create a condition vector
+condRan = rep(c("wake", "sleep"), time=20)
+
+## subject vector
+subj = rep(30:69)
+
+## double check the lenght
+length(subj)
+
+## to be able to replicate
+set.seed(40)
+
+## use sample as random shuffle
+condRan = sample(condRan)
+
+## find to df and convert to tibble
+ranDf = cbind(subj, condRan)
+ranDf = as_tibble(ranDf)
+
+## double check the lenght
+nrow(ranDf[ranDf$condRan == "wake",])
+nrow(ranDf[ranDf$condRan == "sleep",])
+
+## export csv
+write_csv(
+        ranDf,
+        here::here("outputFiles_R", "randomParticipants.csv")
+)
+
+
+```
+
+
+
+
+### Exporting data
+
+Export data to **outputFiles_R**   
+Use it later for analysis and simulation.   
+
+
+```{r exportData}
+
+## training export - cleaned, but not subset
+write_csv(
+        tr_tot_trim,
+        here("outputFiles_R", "tr_tot_trim.csv")
+)
+
+## testing export - cleaned, but not subset
+write_csv(
+        ts_tot_trim,
+        here("outputFiles_R", "ts_tot_trim.csv")
+)
+
+
+## subset of premise and inference with proportion
+write_csv(
+        df_inf_prem_ts,
+        here::here("outputFiles_R", "df_inf_prem_ts.csv")
+)
+
+## subset of one degree and two degree
+write_csv(
+        df_deg_ts,
+        here::here("outputFiles_R", "df_deg_ts.csv")
+)
+
+## subset of premise and inference - premise only middle pairs
+write_csv(
+        df_prem_middle_ts,
+        here::here("outputFiles_R", "df_prem_middle_ts.csv")
+)
+
+
+## simulated data
+write_csv(
+        myData,
+        here::here("outputFiles_R", "myData.csv")
+)
+
+
+## data set with each individual middle premise and inference pairs
+write_csv(
+        df_prem_middle_ts_wide_each,
+        here::here("outputFiles_R", "df_prem_middle_ts_wide_each.csv")
+)
+
+## data set with averaged middle premise pairs and inference
+write_csv(
+        df_prem_middle_ts_wide_avg,
+        here::here("outputFiles_R", "df_prem_middle_ts_wide_avg.csv")
+)
+
+
+```
+
+
+```{r fc_verify}
+# 
+# ## get rid of irrelevant columns
+# temp =
+#         ts_tot_trim %>%
+#         dplyr::select(
+#                 key_resp_test.corr, pairType, participant, condition, trBlocks
+#         ) 
+# 
+# ## calculate proportions
+# temp = 
+#         temp %>%
+#         group_by(
+#                 pairType,
+#                 condition,
+#                 participant,
+#                 trBlocks
+#                 
+#         ) %>% 
+#         dplyr::summarise(
+#                 tot = sum(key_resp_test.corr),
+#                 n = n()
+#         ) %>%
+#         mutate(
+#                 prop = tot/n
+#         ) %>%
+#         ungroup()
+# ## drop not useful columns
+# temp =
+#         temp %>%
+#         filter(
+#                 pairType != "anchor"
+#         )
+# 
+# 
+# 
+# ## colapse inference 
+# temp =
+#         temp %>%
+#         filter(
+#                 pairType == "oneDegree" | pairType == "twoDegree"
+#         ) %>%
+#         group_by(
+#                 participant,
+#                 condition, 
+#                 trBlocks
+#         ) %>%
+#         dplyr::summarise(
+#                 tot = sum(tot),
+#                 n = sum(n)
+#         )
+# 
+# 
+# 
+# 
+# dataset_ts_collapse =
+#         dataset_ts_collapse %>%
+#         add_column(
+#                 pairType = rep("inference",
+#                                times=length(dataset_ts_collapse$participant))
+#         )
+# 
+# 
+# ## add the inference prop to premise
+# dataset_ts =
+#         dataset_ts %>%
+#         filter(
+#                 pairType == "premise"
+#         )
+# dataset_ts_all = 
+#         full_join(
+#                 dataset_ts, dataset_ts_collapse
+#         ) %>%
+#         mutate(
+#                 pairType = as_factor(pairType),  ## change to factors
+#                 participant = as_factor(participant),
+#                 condition = as_factor(condition)
+#         )
+
+
+## -----------------------------------------------------
+# 
+# temp = tibble()
+# ## get rid of irrelevant columns
+# temp =
+#         ts_tot_trim %>%
+#         dplyr::select(key_resp_test.corr, pairType, participant, condition, trBlocks,
+#                       key_resp_test.rt) 
+# 
+# ## calculate proportions
+# temp = 
+#         temp %>%
+#         group_by(
+#                 pairType,
+#                 condition,
+#                 participant,
+#                 trBlocks
+#                 
+#         ) %>% 
+#         dplyr::summarise(
+#                 tot = sum(key_resp_test.corr),
+#                 n = n(),
+#                 rt_avg = mean(key_resp_test.rt)
+#         ) %>%
+#         mutate(
+#                 prop = tot/n
+#         ) %>%
+#         ungroup()
+# 
+# ## drop not useful columns
+# temp =
+#         temp %>%
+#         filter(
+#                 pairType != "anchor"
+#         )
+# 
+# ## colapse inference 
+# temp_collapse =
+#         temp %>%
+#         filter(
+#                 pairType == "oneDegree" | pairType == "twoDegree"
+#         ) %>%
+#         group_by(
+#                 participant,
+#                 condition, 
+#                 trBlocks
+#         ) %>%
+#         dplyr::summarise(
+#                 tot = sum(tot),
+#                 n = sum(n), 
+#                 rt_avg = mean(rt_avg)
+#         ) %>%
+#         mutate(
+#                 prop = tot/n
+#         )
+# temp_collapse =
+#         temp_collapse %>%
+#         add_column(
+#                 pairType = rep("inference",
+#                                times=length(temp_collapse$participant))
+#         )
+# 
+# 
+# ## add the inference prop to premise
+# temp_prem =
+#         temp %>%
+#         filter(
+#                 pairType == "premise"
+#         )
+# temp_all = 
+#         full_join(
+#                 temp_prem, temp_collapse
+#         ) %>%
+#         mutate(
+#                 pairType = as_factor(pairType),  ## change to factors
+#                 participant = as_factor(participant),
+#                 condition = as_factor(condition)
+#         ) %>%
+#         arrange(
+#                 participant
+#         )
+
+
+
+```
+
+
+
+
+
+

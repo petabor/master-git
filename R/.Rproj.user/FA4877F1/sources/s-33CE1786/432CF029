@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1594675017488.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "432CF029",
+    "lastKnownWriteTime" : 1594983447,
+    "last_content_update" : 1594983447858,
+    "path" : "~/Results/R/TI_Analysis.Rmd",
+    "project_path" : "TI_Analysis.Rmd",
+    "properties" : {
+        "cursorPosition" : "615,27",
+        "last_setup_crc32" : "33CE178620aef172",
+        "scrollLine" : "613"
+    },
+    "relative_order" : 10,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

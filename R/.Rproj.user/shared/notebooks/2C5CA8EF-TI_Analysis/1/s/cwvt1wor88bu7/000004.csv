@@ -1,0 +1,12 @@
+"0","## add line"
+"0","x = seq(from=min(residuals(aov_pilot)), to=max(residuals(aov_pilot)), length.out = 100)"
+"2","Data was changed during ANOVA calculation. Thus, residuals cannot be added to original data.
+residuals(..., append = TRUE) will return data and residuals.
+"
+"2","Data was changed during ANOVA calculation. Thus, residuals cannot be added to original data.
+residuals(..., append = TRUE) will return data and residuals.
+"
+"0","lines(x=x, y=dnorm(x, mean = 0, sd=sd(residuals(aov_pilot))))"
+"2","Data was changed during ANOVA calculation. Thus, residuals cannot be added to original data.
+residuals(..., append = TRUE) will return data and residuals.
+"

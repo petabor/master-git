@@ -1,0 +1,5 @@
+"0","## look at linearity of residuals"
+"0","qqnorm(residuals(aov_pilot))   ## should follow the line"
+"2","Data was changed during ANOVA calculation. Thus, residuals cannot be added to original data.
+residuals(..., append = TRUE) will return data and residuals.
+"

@@ -1,0 +1,8 @@
+"0","## residual, fitted.values commands <- same plots"
+"0","plot(residuals(aov_pilot) ~ fitted.values(aov_pilot), main=""Residuals vs fitted: double check"")"
+"2","Data was changed during ANOVA calculation. Thus, residuals cannot be added to original data.
+residuals(..., append = TRUE) will return data and residuals.
+"
+"2","Data was changed during ANOVA calculation. Thus, fitted values cannot be added to original data.
+fitted(..., append = TRUE) will return data and fitted values.
+"

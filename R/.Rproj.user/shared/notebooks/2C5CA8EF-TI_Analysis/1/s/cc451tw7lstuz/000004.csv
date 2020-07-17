@@ -1,0 +1,4 @@
+"0","boxplot(ts_first_selected$prop, ts_first_selected$pairType)"
+"2","Error in x[floor(d)] + x[ceiling(d)] : 
+  non-numeric argument to binary operator
+"

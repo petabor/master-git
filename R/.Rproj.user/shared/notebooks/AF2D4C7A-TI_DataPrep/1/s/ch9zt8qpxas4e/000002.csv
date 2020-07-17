@@ -1,0 +1,29 @@
+"0","## wake testing"
+"0","subj_6 = summary_subj_ts_f(ts_wake_R, 1, 5)"
+"2","`summarise()` ungrouping output (override with `.groups` argument)
+"
+"0","subj_9 = summary_subj_ts_f(ts_wake_R, 6, 10)"
+"2","`summarise()` ungrouping output (override with `.groups` argument)
+"
+"0","subj_11 = summary_subj_ts_f(ts_wake_R, 11, 15)"
+"2","`summarise()` ungrouping output (override with `.groups` argument)
+"
+"0","subj_15 = summary_subj_ts_f(ts_wake_R, 16, 20)"
+"2","`summarise()` ungrouping output (override with `.groups` argument)
+"
+"0","subj_17 = summary_subj_ts_f(ts_wake_R, 21, 25)"
+"2","`summarise()` ungrouping output (override with `.groups` argument)
+"
+"0","## sleep testing"
+"0","subj_7 = summary_subj_ts_f(ts_sleep_R, 1, 5)"
+"2","`summarise()` ungrouping output (override with `.groups` argument)
+"
+"0","subj_8 = summary_subj_ts_f(ts_sleep_R, 6, 10)"
+"2","`summarise()` ungrouping output (override with `.groups` argument)
+"
+"0","subj_18 = summary_subj_ts_f(ts_sleep_R, 11, 15)"
+"2","`summarise()` ungrouping output (override with `.groups` argument)
+"
+"0","subj_19 = summary_subj_ts_f(ts_sleep_R, 16, 20)"
+"2","`summarise()` ungrouping output (override with `.groups` argument)
+"

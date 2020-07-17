@@ -1,0 +1,8 @@
+"0","## load packages
+library(knitr)
+"
+"2","package �knitr� was built under R version 4.0.2"
+"2","Error in value[[3L]](cond) : 
+  Package ‘knitr’ version 1.28 cannot be unloaded:
+ Error in unloadNamespace(package) : namespace ‘knitr’ is imported by ‘rmarkdown’ so cannot be unloaded
+"

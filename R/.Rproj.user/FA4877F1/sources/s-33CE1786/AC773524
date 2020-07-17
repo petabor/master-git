@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1594977561477.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "AC773524",
+    "lastKnownWriteTime" : 23081149961273460,
+    "last_content_update" : 1594977561477,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "5985956A",
+        "caption" : "df_deg_ts_sel",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=df_deg_ts_sel&cache_key=5985956A",
+        "displayedObservations" : "16",
+        "environment" : "",
+        "object" : "df_deg_ts_sel",
+        "preview" : "0",
+        "totalObservations" : "16",
+        "variables" : "8"
+    },
+    "relative_order" : 10,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

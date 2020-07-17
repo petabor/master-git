@@ -1,0 +1,81 @@
+"0","temp = tibble()
+## get rid of irrelevant columns
+temp =
+        ts_tot_trim %>%
+        dplyr::select(key_resp_test.corr, pairType, participant, condition, trBlocks,
+                      key_resp_test.rt) 
+## calculate proportions
+temp = 
+        temp %>%
+        group_by(
+                pairType,
+                condition,
+                participant,
+                trBlocks
+                
+        ) %>% 
+        dplyr::summarise(
+                tot = sum(key_resp_test.corr),
+                n = n(),
+                rt_avg = mean(key_resp_test.rt)
+        ) %>%
+        mutate(
+                prop = tot/n
+        ) %>%
+        ungroup()
+"
+"2","`summarise()` regrouping output by 'pairType', 'condition', 'participant' (override with `.groups` argument)
+"
+"0","## drop not useful columns"
+"0","temp ="
+"0","        temp %>%"
+"0","        filter("
+"0","                pairType != ""anchor"""
+"0","        )"
+"0","## colapse inference "
+"0","temp_collapse ="
+"0","        temp %>%"
+"0","        filter("
+"0","                pairType == ""oneDegree"" | pairType == ""twoDegree"""
+"0","        ) %>%"
+"0","        group_by("
+"0","                participant,"
+"0","                condition, "
+"0","                trBlocks"
+"0","        ) %>%"
+"0","        dplyr::summarise("
+"0","                tot = sum(tot),"
+"0","                n = sum(n), "
+"0","                rt_avg = mean(rt_avg)"
+"0","        ) %>%"
+"0","        mutate("
+"0","                prop = tot/n"
+"0","        )"
+"2","`summarise()` regrouping output by 'participant', 'condition' (override with `.groups` argument)
+"
+"0","temp_collapse ="
+"0","        temp_collapse %>%"
+"0","        add_column("
+"0","                pairType = rep(""inference"","
+"0","                               times=length(temp_collapse$participant))"
+"0","        )"
+"0","## add the inference prop to premise"
+"0","temp_prem ="
+"0","        temp %>%"
+"0","        filter("
+"0","                pairType == ""premise"""
+"0","        )"
+"0","temp_all = "
+"0","        full_join("
+"0","                temp_prem, temp_collapse"
+"0","        ) %>%"
+"0","        mutate("
+"0","                pairType = as_factor(pairType),  ## change to factors"
+"0","                participant = as_factor(participant),"
+"0","                condition = as_factor(condition)"
+"0","        ) %>%"
+"0","        arrange("
+"0","                participant"
+"0","        )"
+"2","Joining, by = c(""pairType"", ""condition"", ""participant"", ""trBlocks"", ""tot"", ""n"", ""rt_avg"", ""prop"")
+"

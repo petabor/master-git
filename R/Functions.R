@@ -1,0 +1,322 @@
+
+### ------------------------------------------ ###
+### Creating functions for different data sets
+### ------------------------------------------ ###
+
+
+
+## load packages
+library(knitr)
+library(devtools)
+library(here)
+library(tidyverse)
+library(emo)
+library(viridis)
+library(ggpirate)
+library(afex)
+library(emmeans)
+library(multcomp)
+library(bootES)
+library(broom)
+library(readr)
+library(blockrand)
+
+
+
+
+
+
+## data set for inference and premise
+## data set for 1 deg and 2 degree
+
+
+
+## *** ---------- Data set for inference and premise
+        
+## r function_df_inf_prem_ts
+## the inserted data set must be already cleaned, so use only in context of already 
+## clean context - when just appropriate blocks selected
+
+dataset_ts_collapse = tibble()
+
+fc_inf_prem_ts = function(dataset_ts){
+        
+        ## get rid of irrelevant columns
+        ts_inf_prem =
+                dataset_ts %>%
+                dplyr::select(
+                        key_resp_test.corr, pairType, participant, condition, trBlocks, key_resp_test.rt
+                ) 
+        
+        ## calculate proportions
+        dataset_ts = 
+                dataset_ts %>%
+                group_by(
+                        pairType,
+                        condition,
+                        participant,
+                        trBlocks
+                        
+                ) %>% 
+                dplyr::summarise(
+                        tot = sum(key_resp_test.corr),
+                        n = n(),
+                        rt_avg = mean(key_resp_test.rt)
+                ) %>%
+                mutate(
+                        prop = tot/n
+                ) %>%
+                ungroup()
+        
+        ## drop not useful columns
+        dataset_ts =
+                dataset_ts %>%
+                filter(
+                        pairType != "anchor"
+                )
+        
+        ## colapse inference 
+        dataset_ts_collapse =
+                dataset_ts %>%
+                filter(
+                        pairType == "oneDegree" | pairType == "twoDegree"
+                ) %>%
+                group_by(
+                        participant,
+                        condition, 
+                        trBlocks
+                ) %>%
+                dplyr::summarise(
+                        tot = sum(tot),
+                        n = sum(n),
+                        rt_avg = mean(rt_avg)
+                ) %>%
+                mutate(
+                        prop = tot/n
+                )
+        dataset_ts_collapse =
+                dataset_ts_collapse %>%
+                add_column(
+                        pairType = rep("inference",
+                                       times=length(dataset_ts_collapse$participant))
+                )
+        
+        
+        ## add the inference prop to premise
+        dataset_ts =
+                dataset_ts %>%
+                filter(
+                        pairType == "premise"
+                )
+        dataset_ts_all = 
+                full_join(
+                        dataset_ts, dataset_ts_collapse
+                ) %>%
+                mutate(
+                        pairType = as_factor(pairType),  ## change to factors
+                        participant = as_factor(participant),
+                        condition = as_factor(condition)
+                ) %>%
+                arrange(
+                        participant
+                )
+        
+}
+
+## applying the function = fc_inf_prem_ts
+# df_inf_prem_ts = fc_inf_prem_ts(ts_tot_trim)
+# head(df_inf_prem_ts)
+
+
+
+
+
+## *** ---------- Data set for inference and premise - middle pairs
+## only middle pairs - so plus letterPos1 and 2 columns
+
+## r function_df_inf_premMiddle_ts
+## the inserted data set must be already cleaned, so use only in context of already 
+## clean context - when just appropriate blocks selected
+
+
+fc_inf_premMiddle_ts = function(dataset_ts_middPrem){
+        
+        ## get rid of irrelevant columns
+        full =
+                dataset_ts_middPrem %>%
+                dplyr::select(
+                        key_resp_test.corr, pairType, participant, condition, 
+                        trBlocks, letterPos1, letterPos2, key_resp_test.rt
+                ) 
+        ## calculate proportions
+        full = 
+                full %>%
+                group_by(
+                        pairType,
+                        condition,
+                        participant,
+                        trBlocks, 
+                        letterPos1, 
+                        letterPos2
+                        
+                ) %>% 
+                dplyr::summarise(
+                        tot = sum(key_resp_test.corr),
+                        n = n(),
+                        rt_avg = mean(key_resp_test.rt)
+                ) %>%
+                mutate(
+                        prop = tot/n
+                ) %>%
+                ungroup()
+        ## drop not useful columns
+        full =
+                full %>%
+                filter(
+                        pairType != "anchor"
+                ) %>%
+                unite(    ## add pos1 and pos2 together, easier
+                        "lettPos", letterPos1:letterPos2, remove = TRUE  
+                )
+        
+        
+        ## select just inference and add proportions
+        deg =
+                full %>%
+                filter(
+                        pairType == "oneDegree" | pairType == "twoDegree"
+                ) %>%
+                group_by(
+                        participant,
+                        condition,
+                        lettPos,
+                        trBlocks
+                ) %>%
+                dplyr::summarise(
+                        tot = sum(tot),
+                        n = sum(n), 
+                        rt_avg = mean(rt_avg)
+                ) %>%
+                mutate(
+                        prop = tot/n
+                )
+        ## add column inference
+        deg =
+                deg %>%
+                add_column(
+                        pairType = rep("inference",
+                                       times=length(deg$participant))
+                ) 
+        
+        
+        ## select just premise
+        middPrem =
+                full %>%
+                filter(
+                        pairType == "premise"
+                ) 
+        ## filter just middle pairs and add proportions
+        middPrem =  
+                middPrem %>%
+                filter(
+                        lettPos != "A_B" & lettPos != "B_A" & lettPos != "E_F" & lettPos != "F_E"
+                ) %>%
+                group_by(
+                        participant,
+                        condition, 
+                        trBlocks, 
+                        lettPos
+                ) %>%
+                dplyr::summarise(
+                        tot = sum(tot),
+                        n = sum(n),
+                        rt_avg = mean(rt_avg)
+                ) %>%
+                mutate(
+                        prop = tot/n
+                )
+        ## add column midd_prem
+        middPrem =
+                middPrem %>%
+                add_column(
+                        pairType = rep("midd_prem",
+                                       times=length(middPrem$participant))
+                )
+        ## merge both inference and premise based on letter
+        deg_prem_merge = 
+                full_join(
+                        deg, middPrem
+                ) %>%
+                mutate(
+                        pairType = as_factor(pairType),  ## change to factors
+                        participant = as_factor(participant),
+                        condition = as_factor(condition),
+                        lettPos = as_factor(lettPos)
+                ) %>%
+                arrange(
+                        participant
+                ) %>%
+                ungroup()
+}
+
+
+
+
+
+
+## *** ---------- Data set for 1 deg and 2 degree
+        
+## r function_df_oneDeg_twoDeg_ts
+## the inserted data set must be already cleaned, so use only in context of already 
+## clean context - when just appropriate blocks selected
+
+
+fc_deg_ts = function(dataset_deg){
+        ## get rid of irrelevant columns
+        dataset_deg =
+                ts_tot_trim %>%
+                dplyr::select(
+                        key_resp_test.corr, pairType, participant, condition, trBlocks,
+                        key_resp_test.rt
+                ) 
+        
+        ## calculate proportions
+        dataset_deg = 
+                dataset_deg %>%
+                group_by(
+                        pairType,
+                        condition,
+                        participant,
+                        trBlocks
+                        
+                ) %>% 
+                dplyr::summarise(
+                        tot = sum(key_resp_test.corr),
+                        n = n(), 
+                        rt_avg = mean(key_resp_test.rt)
+                ) %>%
+                mutate(
+                        prop = tot/n
+                ) %>%
+                ungroup()
+        
+        ## drop not useful columns
+        dataset_deg =
+                dataset_deg %>%
+                filter(
+                        pairType != "anchor"
+                ) %>%
+                filter(pairType != "premise") %>% ## drop premise form data set
+                mutate(
+                        pairType = as_factor(pairType),  ## change to factors
+                        participant = as_factor(participant),
+                        condition = as_factor(condition)
+                )
+}
+
+## applying the function = fc_deg_ts
+# df_deg_ts = fc_deg_ts(ts_tot_trim)
+# head(df_deg_ts)
+
+
+

@@ -1,0 +1,430 @@
+---
+title: "Transitive Inference: Data Handling"
+author: "Petra Borovska"
+date: "21 June 2020"
+output:
+  html_document: default
+  
+  pdf_document: default
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+### Clean environment and console
+
+```{r clean_console}
+cat("\014")
+```
+
+```{r clean_envir}
+rm(list = ls())
+```
+
+
+
+```{r packages, include=FALSE}
+
+# ## install packages
+# install.packages("knitr")
+# install.packages("devtools")
+# install.packages("here")
+# install.packages("tidyverse")
+# devtools::install_github("hadley/emo")
+# install.packages("viridis")
+# devtools::install_github("mikabr/ggpirate")
+# install.packages("afex")
+# install.packages("bootES")
+# install.packages("readr")
+# install.packages("blockrand")
+
+
+## load packages
+library(knitr)
+library(devtools)
+library(here)
+library(tidyverse)
+library(emo)
+library(viridis)
+library(ggpirate)
+library(afex)
+library(emmeans)
+library(multcomp)
+library(bootES)
+library(broom)
+library(readr)
+library(blockrand)
+
+```
+
+
+### What needs to be done
+
+Load data from each participant.
+Both condition - add condition - if W or S
+Create df out of it.
+Select only relevant columns.
+Add column with token, nr of block, 
+
+
+
+
+
+```{r dir}
+
+# here()
+# list.files()
+getwd()
+
+```
+
+```{r locateFiles}
+
+filesLoc = here("dataSets_R")
+lsFiles = list.files(filesLoc)
+
+```
+
+## Loading appropriate files
+
+### 1. Token files - gives me condition affiliation.
+
+```{r load_tokenFile}
+
+tokenFile = read.csv("C:/Users/ibm/Documents/Results/listOfParticipants_token&URLs.csv")
+
+tokenFile_sel = 
+        tokenFile %>%
+        dplyr::select(
+                token_LS,
+                Condition
+                )
+
+```
+
+
+### 2. Files for training and testing
+
+Training = ts_tot
+Testing = tr_tot
+
+Load files for training and testing.
+Both condition in the data set. 
+Swipping done in python.
+
+```{r load_files}
+ts_tot = read.csv(here("dataSets", "ts_tot.csv"))
+tr_tot = read.csv(here("dataSets", "tr_tot.csv"))
+```
+
+### Further goals
+
+Adjust the data.
+Add block number to each data set. <- done 
+Results will be in long format. 
+Add also condition affiliation based on token file above. <- done
+
+
+## Training Data
+
+Clean the training data first.
+
+Divide data set into first 3 or 5 blocks and criterion blocks.
+Select appropriate columns:
+        X, key_resp_Bl.corr, key_resp_Bl.rt, letterPos1, letterPos2, participant
+Delete empty rows in each.
+Merge those two again and sort by participant.
+
+
+
+```{r tr_clean}
+
+## get info on columns
+columnNames_tr = colnames(tr_tot)
+
+## firts data set with first 3 or 5 blocks
+df_tr_Bl = 
+        tr_tot %>%
+        dplyr::select(
+                X, key_resp_Bl.corr, key_resp_Bl.rt, letterPos1, letterPos2, 
+                participant
+        ) %>%
+        drop_na()
+
+
+## second data set - criterion
+df_tr_Cr =
+        tr_tot %>%
+        dplyr::select(
+                X, key_resp_Criterion.corr, key_resp_Criterion.rt, letterPos1, 
+                letterPos2, participant
+        ) %>%
+        drop_na() %>%
+        rename(key_resp_Bl.corr = key_resp_Criterion.corr, 
+               key_resp_Bl.rt = key_resp_Criterion.rt)
+        
+## sort by participant
+tr_tot_trim = 
+        df_tr_Bl %>%
+        full_join(df_tr_Cr) %>%
+        arrange(participant)
+        
+
+```
+
+Data set until now: tr_tot_trim
+Add nr of blocks. 
+
+
+
+```{r add_blockNr}
+
+## create table that gives me summary of number of blocks per participant
+tb = table(tr_tot_trim$participant)
+
+## get just clean numbers in lenght of the table - participant repectively
+tb2 = 0
+for(i in 1:length(tb)){
+        tb2[i] = tb[i]/10
+}
+
+## replicate numbers based on participant lenght and values in table
+## those representing number of blocks, e.g. 32 will be replicated each by 10
+## so 1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2 .. 32,32,32,32,32,32,32,32,32,32
+bl_nr = 0
+for(i in 1:length(tb2)){
+        bl_nr = append(bl_nr, rep(1:tb2[i], each = 10))
+}
+
+## because of the loop 0 was added at the beginning - get rid of it
+bl_nr = bl_nr[-1]
+
+## add the column to final data set
+tr_tot_trim <-
+        tr_tot_trim %>%
+        add_column(blockNr = bl_nr)
+```
+
+
+Training data set with number of blocks - ***tr_tot_trim***
+
+
+
+## Testing Data
+
+Do the same for testing data 
+```{r ts_clean}
+
+## get column names
+colNames_ts_tot = colnames(ts_tot)
+
+## select appropriate columns
+ts_tot_trim = 
+        ts_tot %>%
+        dplyr::select(
+                X, key_resp_test.corr, key_resp_test.rt, letterPos1, 
+                letterPos2, pairType, participant
+        ) %>%
+        drop_na() %>%
+        arrange(participant)
+
+```
+
+
+```{r add_blockNr_ts}
+
+## nr of blocks and trials
+nrBl = 5
+trial = 18
+
+
+## sequence of blocks for one participant
+onePart = rep(1:nrBl, each = trial)
+
+## replicated by number of participants
+## nrParticipants = length of the df divided by nr of trials * nr of blocks
+blCol = rep(onePart, times=length(ts_tot_trim$participant)/(nrBl*trial))
+
+
+## adding the number of blocks to total df - ts
+ts_tot_trim =
+        ts_tot_trim %>%
+        add_column(blockNr = blCol)
+
+```
+
+
+## Adding condition 
+
+Based on my token file. 
+Data set = tokenFile_sel
+
+
+```{r adding_condition_ts}
+
+## looking at the token file, sorting it
+tokenFile_sel_clean <- 
+        tokenFile_sel %>%
+        filter(Condition == "wake" | Condition == "sleep") %>%
+        arrange(token_LS)
+
+## pulling just token number for wake
+subj_wake =
+        tokenFile_sel_clean %>%
+        filter(Condition == "wake") %>%
+        pull(token_LS)
+
+## pulling token number for sleep
+subj_sleep = 
+        tokenFile_sel_clean %>%
+        filter(Condition == "sleep") %>%
+        pull(token_LS)
+
+## creating columns with condition
+cond = ifelse(ts_tot_trim$participant %in% subj_wake, "wake", "sleep")
+
+## adding column with condition
+ts_tot_trim <-
+        ts_tot_trim %>%
+        add_column(condition = cond)
+
+```
+
+
+Add column with condition to training data.
+```{r addint_condition_tr}
+
+## using token data also for training
+subj_wake
+subj_sleep
+
+## creating columns with condition
+cond_tr = ifelse(tr_tot_trim$participant %in% subj_wake, "wake", "sleep")
+
+
+## adding column with condition
+tr_tot_trim <-
+        tr_tot_trim %>%
+        add_column(condition = cond_tr)
+
+
+
+```
+
+Add column with which block is the training and which block is criterion
+categories:
+        1. mandatory
+        2. criterion
+
+```{r column_typeBl}
+
+
+## variable for criterion 
+blCriterion_5bl = c(1,2,3,4,5)  ## can be changed - so e.g. for the 3 bl, could be adjusted
+                                ## in that case separate data set to 3bl and 5bl training
+blCriterion_3bl =  c(1, 2, 3)
+
+
+## variable for token which are in 3bl or 5bl
+bl3_token = c(6,7,8,9,11,15)
+bl5_token = c(16,17,18,19,20,21)
+
+
+## for loop for creating the column if 3 block mandatory or 5 blocks mandatory
+blType = integer()
+for(i in 1:length(tr_tot_trim$participant)){
+        if(tr_tot_trim$participant[i] %in% bl3_token){
+                if(tr_tot_trim$blockNr[i] %in% blCriterion_3bl){
+                        blType[i] = "mandatory"
+                        } else {
+                                blType[i] = "criterion"
+                        }
+        } else if(tr_tot_trim$participant[i] %in% bl5_token){
+                        if(tr_tot_trim$blockNr[i] %in% blCriterion_5bl){
+                                blType[i] = "mandatory"
+                        } else {
+                                blType[i] = "criterion"
+                        }
+                } 
+}
+
+
+## add column for block type
+tr_tot_trim = 
+        tr_tot_trim %>%
+        add_column(
+                blockType = blType
+        )
+
+```
+
+
+### Randomization of participants
+
+```{r blockRandom}
+
+## create a condition vector
+condRan = rep(c("wake", "sleep"), time=20)
+
+## subject vector
+subj = rep(30:69)
+
+## double check the lenght
+length(subj)
+
+## to be able to replicate
+set.seed(40)
+
+## use sample as random shuffle
+condRan = sample(condRan)
+
+## find to df and convert to tibble
+ranDf = cbind(subj, condRan)
+ranDf = as.tibble(ranDf)
+
+## double check the lenght
+nrow(ranDf[ranDf$condRan == "wake",])
+nrow(ranDf[ranDf$condRan == "sleep",])
+
+## export csv
+write_csv(
+        ranDf,
+        here::here("outputFiles_R", "randomParticipants.csv")
+)
+
+
+```
+
+
+
+
+### Exporting data
+
+Export data to **outputFiles_R**   
+Use it later for analysis and simulation.   
+
+
+```{r exportData}
+
+## training export
+write_csv(
+        tr_tot_trim,
+        here("outputFiles_R", "tr_tot_trim.csv")
+)
+
+## testing export
+write_csv(
+        ts_tot_trim,
+        here("outputFiles_R", "ts_tot_trim.csv")
+)
+
+```
+
+
+
+
+
+
+
+

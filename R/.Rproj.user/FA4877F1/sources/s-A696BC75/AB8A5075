@@ -1,0 +1,24 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1593607730988.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "AB8A5075",
+    "lastKnownWriteTime" : 1594369087,
+    "last_content_update" : 1594369087341,
+    "path" : "~/Results/R/TI_DataPrep.Rmd",
+    "project_path" : "TI_DataPrep.Rmd",
+    "properties" : {
+        "cursorPosition" : "382,5",
+        "last_setup_crc32" : "",
+        "scrollLine" : "373",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

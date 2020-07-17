@@ -1,0 +1,4 @@
+"0","## VISUAL CHECK"
+"0","## two ways where to get residuals and fitted values"
+"0","## from aov_ez"
+"0","plot(aov_pilot$lm$residuals ~ aov_pilot$lm$fitted.values, main=""Pilot: Residuals vs fitted values"")"

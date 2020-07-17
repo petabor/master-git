@@ -1,0 +1,26 @@
+"0","## group by condition and pairType to see mean, median, sd, IQR == for response times
+pilot_groupSummary_rt =
+        df_deg_ts_sel %>%
+        group_by(
+                condition, 
+                pairType
+        ) %>%
+        dplyr::summarise(
+                n = n(),
+                mean = mean(rt_avg),
+                median = median(rt_avg), 
+                sd = sd(rt_avg),
+                sem = sd/sqrt(n),
+                min = min(rt_avg),
+                max = max(rt_avg)
+                ) %>%
+        mutate(
+                lower.ci = mean - qt(1 - (0.5 / 2), n - 1) * sem,
+                upper.ci = mean + qt(1 - (0.5 / 2), n - 1) * sem
+        ) %>%
+        ungroup()
+"
+"2","`summarise()` regrouping output by 'condition' (override with `.groups` argument)
+"
+"0","## look at summary"
+"0","pilot_groupSummary_rt"

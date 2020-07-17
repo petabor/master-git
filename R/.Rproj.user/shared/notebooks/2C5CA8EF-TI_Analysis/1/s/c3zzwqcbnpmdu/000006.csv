@@ -1,0 +1,8 @@
+"0","## loading clean data in long format"
+"0","here::here()"
+"1","[1]"
+"1"," ""C:/Users/ibm/Documents/Results/R"""
+"1","
+"
+"0","tr_tot_trim = read.csv(here::here(""outputFiles_R"", ""tr_tot_trim.csv""))"
+"0","ts_tot_trim = read.csv(here::here(""outputFiles_R"", ""ts_tot_trim.csv""))"

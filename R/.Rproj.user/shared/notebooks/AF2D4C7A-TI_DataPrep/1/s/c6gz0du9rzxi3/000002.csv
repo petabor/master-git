@@ -1,0 +1,45 @@
+"0","updateR()
+"
+"1","Installing the newest version of R,
+ please wait for the installer file to be download and executed.
+ Be sure to click 'next' as needed...
+"
+"2","trying URL 'https://cran.rstudio.com/bin/windows/base/R-4.0.2-win.exe'
+"
+"2","Content type 'application/x-msdownload'"
+"2"," length 87708696 bytes (83.6 MB)
+"
+"2","downloaded 83.6 MB
+
+"
+"1","
+The file was downloaded successfully into:
+"
+"1"," "
+"1","C:\Users\ibm\AppData\Local\Temp\RtmpCiSDXi/R-4.0.2-win.exe"
+"1"," "
+"1","
+"
+"1","
+Running the installer now...
+"
+"1","
+Installation status: "
+"1"," "
+"1","TRUE"
+"1"," "
+"1",". Removing the file:
+"
+"1"," "
+"1","C:\Users\ibm\AppData\Local\Temp\RtmpCiSDXi/R-4.0.2-win.exe"
+"1"," "
+"1","
+ (In the future, you may keep the file by setting keep_install_file=TRUE) 
+"
+"1","No packages to copy.  Goodbye :) 
+"
+"2","running command 'C:/PROGRA~1/R/R-4.0.2/bin/Rscript.exe -e "" options(repos=structure(c(CRAN='https://cran.rstudio.com/'))); update.packages(checkBuilt=TRUE, ask=FALSE) ""' had status 1"
+"1","[1]"
+"1"," TRUE"
+"1","
+"

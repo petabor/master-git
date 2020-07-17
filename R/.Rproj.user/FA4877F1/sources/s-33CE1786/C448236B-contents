@@ -1,0 +1,692 @@
+### ---------------------------------------------------------------------------------------------------
+### SETTINGS 
+### ---------------------------------------------------------------------------------------------------
+
+
+# results of adult piloting
+setwd("C:\\Users\\ibm\\Documents\\R\\MasterThesis")
+getwd()
+
+
+### ---------------------------------------------------------------------------------------------------
+### PACKAGES 
+### ---------------------------------------------------------------------------------------------------
+
+
+### INSTALLING PACKAGES
+### ---------------------------------------------------------------------------------------------------
+remove.packages(c("ggplot2", "scales", "car"))
+install.packages("ggplot2", dependencies = TRUE)
+install.packages("scales", dependencies = TRUE)
+install.packages("car", dependencies = TRUE)
+install.packages("dplyr")
+install.packages("rcompanion")
+install.packages("plotrix")
+install.packages("pastecs")
+install.packages("lsmeans")
+install.packages("stats")
+install.packages("multcomp")
+install.packages("Rcpp")
+install.packages("lme4")
+install.packages("epitools")
+install.packages("RVAideMemoire")
+install.packages("esc")
+install.packages("BBmisc")
+install.packages("effsize")
+install.packages("DescTools")
+
+
+### LOADING PACKAGES
+### ---------------------------------------------------------------------------------------------------
+library(ggplot2)
+library(scales)
+library(car)
+library(dplyr)
+library(rcompanion)
+library(plotrix)
+library(pastecs)
+library(lsmeans)
+library(stats)
+library(multcomp)
+library(Rcpp)
+library(lme4)
+library(epitools)
+library(RVAideMemoire)
+library(plyr)
+library(esc)
+library(BBmisc)
+library(effsize)
+library(DescTools)
+### ---------------------------------------------------------------------------------------------------
+
+
+
+
+
+### ***                                 *** chance data ***                             *** ##
+
+## load data set with choice numbers, randomly generated, assuming no direction
+
+chance_data <- read.table(file = 'dataSimulation_chanceData_prop.csv', sep = ';', header = TRUE, dec = ',')
+head(chance_data)
+# ?read.table
+# ?plot()
+
+
+chance_data$type = as.factor(chance_data$type)
+chance_data$type
+class(chance_data$sl_wake)
+
+
+## histogram of response time, chance data, all pairs response time
+hist(chance_data$rt, main = 'Response time distribution_chanceData', xlab = 'response time')
+
+
+## subset based on type of pair
+deg1 <- chance_data[chance_data$type == '1deg',]
+deg2 <- chance_data[chance_data$type == '2deg',]
+prem <- chance_data[chance_data$type == 'prem',]
+anchor <- chance_data[chance_data$type == 'anchor',]
+
+
+## plot avg performance in each type of pair
+hist(deg1$perf_avg, main = 'performance in 1 degree pairs', xlab = '1 deg performance')
+hist(deg2$perf_avg, main = 'performance in 2 degree pairs', xlab = '2 deg performance')
+hist(prem$perf_avg, main = 'performance premise pairs', xlab = 'premise performance')
+hist(anchor$perf_avg, main = 'performance in anchor pairs', xlab = 'anchor performance')
+
+## plot proportion performance in each type of pair
+hist(deg1$prop_perf, main = 'performance prop in 1 degree pairs', xlab = '1 deg performance prop')
+hist(deg2$prop_perf, main = 'performance prop in 2 degree pairs', xlab = '2 deg performance prop')
+
+## rt of each type of pair
+hist(deg1$rt, main = 'response time in 1 degree pairs', xlab = '1 deg responnse time')
+hist(deg2$rt, main = 'response time in 1 degree pairs', xlab = '1 deg response time')
+hist(prem$rt, main = 'response time in 1 degree pairs', xlab = '1 deg response time')
+hist(anchor$rt, main = 'response time in 1 degree pairs', xlab = '1 deg response time')
+
+
+plot(deg1$sl_wake, deg1$perf_avg)
+
+
+## how does distribution of proportions of performance looks like
+hist(chance_data$prop_perf)
+
+
+
+## aov model with main effect of sleep, wake condition and type of pair
+model_aov_chance = aov(chance_data$prop_perf ~ chance_data$sl_wake + chance_data$type)
+summary(model_aov_chance)
+
+
+model_lm_chance = lm(chance_data$prop_perf ~ chance_data$sl_wake + chance_data$type)
+summary(model_lm_chance)
+
+
+
+
+
+## calculations
+
+## subset
+deg1_w <- deg1[deg1$sl_wake == 'wake',]
+deg2_w <- deg2[deg2$sl_wake == 'wake',]
+prem_w <- prem[prem$sl_wake == 'wake',]
+anchor_w <- anchor[anchor$sl_wake == 'wake',]
+
+
+sum_deg1_w <- mean(deg1_w$prop_perf)
+sum_deg2_w <- mean(deg2_w$prop_perf)
+sum_prem_w <- mean(prem_w$prop_perf)
+sum_anchor_w <- mean(anchor_w$prop_perf)
+
+
+
+
+
+### ***                                 *** expected data ***                             *** ##
+
+## loading the expected data
+expected_data <- read.table(file = 'dataSimulation_expectedData.csv', sep = ';', header = TRUE, dec = ',')
+head(expected_data)
+
+
+
+## subset based on type of pair
+deg1_exp <- expected_data[expected_data$type == '1deg',]
+deg2_exp <- expected_data[expected_data$type == '2deg',]
+prem_exp <- expected_data[expected_data$type == 'prem',]
+anchor_exp <- expected_data[expected_data$type == 'anchor',]
+
+## subset based on condition
+wake_exp <- expected_data[expected_data$sl_wake == 'wake', ]
+sleep_exp <- expected_data[expected_data$sl_wake == 'sleep', ]
+
+
+
+## boxplots of different pair types and avg performance
+plot(deg1_exp$sl_wake, deg1_exp$perf_avg, main = '1 degree performnace in two conditions sleep and wake', ylab = 'performance')
+plot(deg2_exp$sl_wake, deg2_exp$perf_avg, main = '2 degree performnace in two conditions sleep and wake', ylab = 'performance')
+plot(prem_exp$sl_wake, prem_exp$perf_avg, main = 'premise pair performnace in two conditions sleep and wake', ylab = 'performance')
+plot(anchor_exp$sl_wake, anchor_exp$perf_avg, main = 'anchor pair performnace in two conditions sleep and wake', ylab = 'performance')
+
+
+## boxplots of different pair types and response times
+plot(deg1_exp$sl_wake, deg1_exp$rt, main = '1 degree and response time in two conditions sleep and wake', ylab = 'responseTime')
+plot(deg2_exp$sl_wake, deg2_exp$rt, main = '2 degree and response time in two conditions sleep and wake', ylab = 'responseTime')
+plot(prem_exp$sl_wake, prem_exp$rt, main = 'premise pairs and response time in two conditions sleep and wake', ylab = 'responseTime')
+plot(anchor_exp$sl_wake, anchor_exp$rt, main = 'anchor paris and response tiem in two conditions sleep and wake', ylab = 'responseTime')
+
+
+## see distribution of average performance in wake condition, should be skewed, because I simulated it so
+hist(wake_exp$perf_avg)
+
+
+## see distribution of average performance in sleep condition
+hist(sleep_exp$perf_avg)
+
+
+## disribution among wake and sleep performance
+plot(wake_exp$perf_avg)
+plot(sleep_exp$perf_avg)
+
+
+## performance boxplot in different pair type during wake and sleep
+plot(sleep_exp$type, sleep_exp$perf_avg)
+plot(wake_exp$type, wake_exp$perf_avg)
+
+
+## performance in both conditions and pair type
+mainPlot <- ggplot(data = expected_data, aes(x=type, y=perf_avg))
+mainPlot + stat_summary(fun.y=mean, geom = "bar", position="dodge", colour = 'black', aes(fill=sl_wake)) +scale_fill_manual(values = c("#FFCC00", "#993300")) + labs(title='performnace in conditions based on pair type', x='pair type', y='performance', fill='condition')
+
+
+## response time in both conditions and pair type
+png(file="plots\\rt_expected_data.png")
+mainPlot_rt <- ggplot(data = expected_data, aes(x=type, y=rt))
+mainPlot_rt + stat_summary(fun.y=mean, geom = "bar", position="dodge", colour = 'black', aes(fill=sl_wake)) +scale_fill_manual(values = c("lightblue", "grey")) + labs(title='response time in conditions based on pair type', x='pair type', y='response time', fill='condition')
+dev.off()
+
+
+
+
+# ------------------------------------------------------------------------------------------------- #
+### ***                                    *** SIMULATION DATA ***                             *** ##
+### ***                                    ***  expected data  ***                             *** ##
+# ------------------------------------------------------------------------------------------------- #
+
+
+
+## loading the simulated data
+sim_data <- read.table(file = 'dataSimulation_withDifferentResults.csv', sep = ';', header = TRUE, dec = ',')
+head(sim_data)
+
+
+sim_data_pairAsPred <- read.table(file = 'dataSim_pairsAsPredictor_v1.csv', sep = ';', header = TRUE, dec = ',')
+head(sim_data_pairAsPred)
+
+## *** ----- 1. DATA HANDLING ----- *** ##
+
+## check if my script worked - make means
+## clean data - round rt, add tres as percentiges, for the model try to use both
+## subset for - each pair, both condition, each condition each pair 
+
+
+
+## *** ----- 2. MODEL PARAMETERS ----- *** ##
+
+## model description
+
+#       2 dependent measures: 
+#                               1. performance = perf
+#                               2. response time = rt
+#       2 independent measures:
+#                               1. condition <- 2 levels
+#                                       - sleep
+#                                       - wake
+#                               2. pair type <- 4 levels
+#                                       - 1deg
+#                                       - 2deg
+#                                       - prem
+#                                       - anchor
+
+
+## the data has been adjusted: the proportion was calculated for all pairs, so no it's comparable
+##      <- but careful - that can have some consequences I'm not aware right now
+##      <- alternative is to keep the data in it's original values - but then how to do model comparison exactly?
+##      <- discuss also whether they should be z / log transformed - probably depends also on assumption check
+
+
+
+
+## *** ----- 3. STATS ----- *** ##
+
+## steps:
+
+# 1. 
+# plot distribution of: 
+#               dm, 
+#               iv in each condition:
+#                       wake + all pairs
+#                       sleep + all pairs
+#                       deg1 + both condition
+#                       deg2 + both condition
+#                       prem + both condition
+#                       anchor + both condition
+# plot results - ggplot with all pairs in two conditions
+
+
+# 2. 
+# run correlation between premise pairs in wake and sleep ?? maybe
+
+# 3. 
+# run the model
+
+# 4. 
+# test the assumptions for ANOVA:
+#               1. independence of observations
+#               2. dv should be at interval level - continuous <- question how to handle exactly proportion
+#               3. homogeneity of variance - homoscedasticity:
+#                       - visual check - fitted ~ residuals <- no pattern
+#                       - Levene test <- leveneTest(dv ~ condition) - should not be sign (null - the groups had equal population variance)
+#               4. normality of residuals
+#                       - visual check - plot residuals, hist (add line x=seq(from=min(residuals(twoway)),
+#                                                               to=max(residuals(twoway)), length.out=100)
+#                                                               lines(x=x, y=dnorm(x, mean=0,sd=sd(residuals(twoway)))))
+#                       - QQ plot: qqnorm(residuals()), qqline(residuals())
+#                       - kolmogorov-smirnov test, ks.test() - should not be sign <- it does not follow normal distribution
+#                       - shapiro-wilk test, shapiro.test() - should not be sign
+
+
+# test the asumptios for poisson glm:
+#               1. balanced design - same number in each condition (that should be fine) <- problems with complete separation
+#               2. multicolliearity (relatedness of predictors)
+#                       vif(model) <- values around 1 should be fine, more - tend to be colinear
+#                       z transform - not for binary - low counts also in question
+#               3. check on influencial cases
+#                       - Cooks's distance <- max(cooks.distance(model))
+#                               inspect visually, otherwise if > 4/N  or 4/(N-k-1), where a N - number of observations, k - number of explanatory variables
+#                               ols_plot_cooksd_chart() <- plot data
+#                       - dfbetas - model stability <- max(abs(dfbeta(model)))
+#                               <- inspect range of coefficients: cbind(coefficients(model), coefficients(model)+t(apply(X=dfbeta(model), MARGIN=2, FUN=range)))
+#                               plot data - ols_plot_dfbetas(model)
+#                               values bigger than 1 suspicious
+#               4. overdispersion - if sd of the response larger than model assume, response is overdispersed <- sd of coefficients too small, increase type I error
+#                       - disperisontest(model) <- should be around 1, over 1 overdispersed
+#                               - arising due to missing important predictor
+#                               - package(AER)
+#               5. full null model comparison
+#                       - full model comparing to null model:
+#                               full = glm(dv ~ cond1 * cond2)
+#                               null = glm(dv ~ 1)
+#                               anova(full, null, test='Chisq')
+#                       - effect of interaction - full to reduced
+#                               reduced = glm(dv ~ cond1 + cond2)
+#                               anova(full, reduced, test='Chisq')
+#                       - test the main effect to reduced to further reduced
+#                               reduced2 = glm(dv ~ cond1)
+#                               anova(full, reduced2)
+#                       - effect of condition
+#                               reduced3 = glm(dv ~ cond2)
+#                               anova(full, reduced3)
+#               6. get confidence intervals
+#                       confint(model)
+#                       cbind(coefficients(full), confint(object=full))
+
+
+
+# 5.
+# run simulation with p values
+
+# 6. 
+# post hoc test - TukeyHSD() 
+
+
+## do it probably with all tresholds - or based on the data adjust the tresholds again
+
+
+
+
+
+
+## *** ----- 1. DATA HANDLING ----- *** ##
+
+## clean data - round rt, add tres as percentiges, for the model try to use both
+## subset for - each pair, both condition, each condition each pair 
+## check if my script worked - make means
+
+
+# round rt
+sim_data$rt = round(sim_data$rt, 2)
+head(sim_data)
+
+## sim data pairAsPred dataset
+sim_data_pairAsPred$rt_60 = round(sim_data_pairAsPred$rt_60, 2)
+sim_data_pairAsPred$rt_chance = round(sim_data_pairAsPred$rt_chance, 2)
+
+
+
+# add colums with proportion format
+sim_data$prop_0.60 = sim_data$tres_0.60 / 100
+sim_data$prop_0.70 = sim_data$tres_0.70 / 100
+sim_data$prop_0.75 = sim_data$tres_0.75 / 100
+sim_data$prop_0.80 = sim_data$tres_0.80 / 100
+
+
+## subset based on condition
+## sim data dataset
+wake_sim <- sim_data[sim_data$sl_wake == 'wake', ]
+sleep_sim <- sim_data[sim_data$sl_wake == 'sleep', ]
+
+## sim data pairAsPred dataset
+wake_sim_pairAsPred <- sim_data_pairAsPred[sim_data_pairAsPred$sl_wake == 'wake', ]
+sleep_sim_pairAsPred <- sim_data_pairAsPred[sim_data_pairAsPred$sl_wake == 'sleep', ]
+
+
+## subset based on type of pair
+deg1_sim <- sim_data[sim_data$type == '1deg',]
+deg2_sim <- sim_data[sim_data$type == '2deg',]
+prem_sim <- sim_data[sim_data$type == 'prem',]
+anchor_sim <- sim_data[sim_data$type == 'anchor',]
+
+## subset type and condition
+deg1_sim_wake <- deg1_sim[deg1_sim$sl_wake == 'wake',]
+deg1_sim_sleep <- deg1_sim[deg1_sim$sl_wake == 'sleep',]
+
+deg2_sim_wake <- deg2_sim[deg2_sim$sl_wake == 'wake',]
+deg2_sim_sleep <- deg2_sim[deg2_sim$sl_wake == 'sleep',]
+
+prem_sim_wake <- prem_sim[prem_sim$sl_wake == 'wake',]
+prem_sim_sleep <- prem_sim[prem_sim$sl_wake == 'sleep',]
+
+anchor_sim_wake <- anchor_sim[anchor_sim$sl_wake == 'wake',]
+anchor_sim_sleep <- anchor_sim[anchor_sim$sl_wake == 'sleep',]
+
+
+## check if the script worked
+# look at means <- the deviation will be - but small, because manually entered values in 2 lines and differnt rounding
+
+mean(deg1_sim_sleep$tres_0.60) # deg1_sim_sleep tres_60
+mean(deg1_sim_sleep$tres_0.70) # deg1_sim_sleep tres_70
+mean(deg1_sim_sleep$tres_0.75)
+mean(deg1_sim_sleep$tres_0.80)
+
+mean(deg2_sim_sleep$tres_0.60) 
+mean(deg2_sim_sleep$tres_0.70)
+mean(deg2_sim_sleep$tres_0.75)
+mean(deg2_sim_sleep$tres_0.80)
+
+
+mean(wake_sim_pairAsPred$X1deg_60)
+mean(wake_sim_pairAsPred$X2deg_60)
+mean(wake_sim_pairAsPred$prem_50)
+mean(wake_sim_pairAsPred$anchor_50)
+
+mean(sleep_sim_pairAsPred$X1deg_60)
+mean(sleep_sim_pairAsPred$X2deg_60)
+mean(sleep_sim_pairAsPred$prem_50)
+mean(sleep_sim_pairAsPred$anchor_50)
+
+
+
+
+## it works
+
+
+
+
+
+
+## *** ----- 3. STATS ----- *** ##
+
+# 1. 
+# plot distribution of: 
+#               dm, 
+#               iv in each condition:
+#                       wake + all pairs
+#                       sleep + all pairs
+#                       deg1 + both condition
+#                       deg2 + both condition
+#                       prem + both condition
+#                       anchor + both condition
+# plot results - ggplot with all pairs in two conditions
+
+
+# hist on dm for perf, just to reflect the tendency
+hist(sim_data$tres_0.60)
+hist(sim_data$tres_0.70)
+hist(sim_data$tres_0.75)
+hist(sim_data$tres_0.80)
+
+head(sim_data)
+
+## sim_data_pairAsPred
+hist(sim_data_pairAsPred$X1deg_60)
+hist(sleep_sim_pairAsPred$X1deg_chance)
+hist(wake_sim_pairAsPred$X1deg_chance)
+
+
+## main plot compared to chance
+head(chance_data)
+png(file="plots\\chance_data_noEffect.png")
+mainPlot_chance_data <- ggplot(data = chance_data, aes(x=type, y=prop_perf))
+mainPlot_chance_data + stat_summary(fun.y=mean, geom = "bar", position="dodge", colour = 'black', aes(fill=sl_wake)) +scale_fill_manual(values = c("#008080", "#808080")) + labs(title='performnace with chance mean in conditions based on pair type', x='pair type', y='performance', fill='condition')
+dev.off()
+
+
+## main plot of simulated data, mean 0.60
+png(file="plots\\sim_data_smallEffect0.60.png")
+mainPlot_sim_data <- ggplot(data = sim_data, aes(x=type, y=prop_0.60))
+mainPlot_sim_data + stat_summary(fun.y=mean, geom = "bar", position="dodge", colour = 'black', aes(fill=sl_wake)) +scale_fill_manual(values = c("#008080", "#808080")) + labs(title='performnace with mean 0.60 in conditions based on pair type', x='pair type', y='performance', fill='condition')
+dev.off()
+
+## main plot of simulated data, mean 0.70
+png(file="plots\\sim_data_biggerEffect0.70.png")
+mainPlot_sim_data <- ggplot(data = sim_data, aes(x=type, y=prop_0.70))
+mainPlot_sim_data + stat_summary(fun.y=mean, geom = "bar", position="dodge", colour = 'black', aes(fill=sl_wake)) +scale_fill_manual(values = c("#008080", "#808080")) + labs(title='performnace with mean 0.70 in conditions based on pair type', x='pair type', y='performance', fill='condition')
+dev.off()
+
+## main plot of simulated data, mean 0.75
+png(file="plots\\sim_data_biggerEffect0.75.png")
+mainPlot_sim_data <- ggplot(data = sim_data, aes(x=type, y=prop_0.75))
+mainPlot_sim_data + stat_summary(fun.y=mean, geom = "bar", position="dodge", colour = 'black', aes(fill=sl_wake)) +scale_fill_manual(values = c("#008080", "#808080")) + labs(title='performnace with mean 0.75 in conditions based on pair type', x='pair type', y='performance', fill='condition')
+dev.off()
+
+## main plot of simulated data, mean 0.80
+png(file="plots\\sim_data_bigEffect0.80.png")
+mainPlot_sim_data <- ggplot(data = sim_data, aes(x=type, y=prop_0.80))
+mainPlot_sim_data + stat_summary(fun.y=mean, geom = "bar", position="dodge", colour = 'black', aes(fill=sl_wake)) +scale_fill_manual(values = c("#008080", "#808080")) + labs(title='performnace with mean 0.80 in conditions based on pair type', x='pair type', y='performance', fill='condition')
+dev.off()
+
+## response time in both conditions and pair type
+mainPlot_sim_data_rt <- ggplot(data = sim_data, aes(x=type, y=rt))
+mainPlot_sim_data_rt + stat_summary(fun.y=mean, geom = "bar", position="dodge", colour = 'black', aes(fill=sl_wake)) +scale_fill_manual(values = c("lightblue", "grey")) + labs(title='response time in conditions based on pair type', x='pair type', y='response time', fill='condition')
+
+
+
+
+# 3. 
+# run the model
+
+# 4. 
+# test the assumptions for ANOVA:
+#               1. independence of observations
+#               2. dv should be at interval level - continuous <- question how to handle exactly proportion
+#               3. homogeneity of variance - homoscedasticity:
+#                       - visual check - fitted ~ residuals <- no pattern
+#                       - Levene test <- leveneTest(dv ~ condition) - should not be sign (null - the groups had equal population variance)
+#               4. normality of residuals
+#                       - visual check - plot residuals, hist (add line x=seq(from=min(residuals(twoway)),
+#                                                               to=max(residuals(twoway)), length.out=100)
+#                                                               lines(x=x, y=dnorm(x, mean=0,sd=sd(residuals(twoway)))))
+#                       - QQ plot: qqnorm(residuals()), qqline(residuals())
+#                       - kolmogorov-smirnov test, ks.test() - should not be sign <- it does not follow normal distribution
+#                       - shapiro-wilk test, shapiro.test() - should not be sign
+
+
+
+
+
+ 
+# run the model as a main effect
+aov_60 = aov(sim_data$prop_0.60 ~ sim_data$sl_wake + sim_data$type)
+summary(aov_60)  ## both condition and type significant
+
+
+# run the model as interaction
+aov_60_interact = aov(sim_data$prop_0.60 ~ sim_data$sl_wake*sim_data$type)
+summary(aov_60_interact)
+
+
+
+# as interaction with glm
+poisson_60_interact = glm(prop_0.60 ~ sl_wake * type, family=poisson, data=sim_data)
+vif(poisson_60_interact)
+
+
+# run the chance model for comparison
+aov_chance_data = aov(chance_data$prop_perf ~ chance_data$sl_wake + chance_data$type)
+summary(aov_chance_data)
+
+# chance data with only main predictor
+chance_data$count
+aov_chance_data_cond = aov(chance_data$count ~ chance_data$sl_wake)
+summary(aov_chance_data_cond)  ## significant
+
+
+## simplified model - without pair comparison
+aov_60_cond = aov(sim_data$prop_0.60 ~ sim_data$sl_wake)
+summary(aov_60_cond)
+
+
+## response time as dependent variable
+aov_sim_data_rt = aov(sim_data$rt ~ sim_data$sl_wake)
+summary(aov_sim_data_rt)
+
+
+## sim_data_pairAsPred model
+aov_sim_data_pairAsPred = aov(sim_data_pairAsPred$X1deg_60 ~ sim_data_pairAsPred$sl_wake)
+summary(aov_sim_data_pairAsPred)
+
+## glm with poisson distribution for sim_data_pairAsPred
+poisson_sim_data_pairAsPred = glm(X1deg_60 ~ sl_wake, family=poisson, data = sim_data_pairAsPred)
+summary(poisson_sim_data_pairAsPred)
+
+
+
+
+
+## 3.
+## homogeneity of variance - homoscedasticity
+plot(x=fitted(aov_60), y=residuals(aov_60), pch=19)
+## it does not look good - there is some strange pattern
+
+aov_60$fitted.values
+plot(x=aov_60$fitted.values[82:160], y=aov_60$residuals[82:160], pch=19)
+
+## chance data
+plot(x=fitted(aov_chance_data), y=residuals(aov_chance_data), pch=19)
+## looks weird as well
+
+## chance data only with main predictor
+plot(x=fitted(aov_chance_data_cond), y=residuals(aov_chance_data_cond), pch=19)
+
+
+## plotting simplified model for comparison
+plot(x=fitted(aov_60_cond), y=residuals(aov_60_cond), pch=19)
+## def a pattern, all grouped in 0.50 and 0.70 - on edges, does not vary enough
+## plot residuals
+hist(residuals(aov_60_cond))
+
+
+## response time residuals to fitted - just to double check if problem is in dependent measure
+plot(x=fitted(aov_sim_data_rt), y=residuals(aov_sim_data_rt), pch=19)
+## still looks same
+
+
+## data set adjusted
+plot(x=fitted(aov_sim_data_pairAsPred), y=residuals(aov_sim_data_pairAsPred), pch=19)
+
+## with the poisson distribution
+poisson_sim_data_pairAsPred
+plot(x=fitted(poisson_sim_data_pairAsPred), y=residuals(poisson_sim_data_pairAsPred), pch=19)
+
+hist(residuals(poisson_sim_data_pairAsPred))
+
+
+## Levene test
+## leven check must have interaction term - just tried that 
+aov_60_check = aov(sim_data$prop_0.60 ~ sim_data$sl_wake*sim_data$type)
+
+
+# leveneTest(sim_data$prop_0.60 ~ sim_data$sl_wake + sim_data$type)  ## does not work with two main predictors, without interaction
+leveneTest(aov_60_check)        ## it's significant - bad
+leveneTest(sim_data$prop_0.60 ~ sim_data$sl_wake) ## works only with one predictor - significant, bad
+
+# levene test for chance data
+leveneTest(chance_data$prop_perf ~ chance_data$sl_wake*chance_data$type)
+## not significant - good
+
+## look at predicted and actual values
+plot(predict(aov_60_cond), sim_data$prop_0.60, xlab='predicted', ylab = 'actual')
+# abline(a=0, b=1)
+
+
+
+## conclusion on 0.60 mean
+# so the plot look bad and levenTest is significant on one predictor and with interaciton term as pair type
+
+
+## 4.
+## normality of residuals
+
+## visual check
+hist(residuals(aov_60), probability = T)
+## add line
+x = seq(from=min(residuals(aov_60)), to=max(residuals(aov_60)), length.out = 100)
+lines(x=x, y=dnorm(x, mean = 0, sd=sd(residuals(aov_60))))
+## but residuals looks good - or okey ish, could be better
+
+
+## qq plot
+qqnorm(residuals(aov_60))
+qqline(residuals(aov_60))
+## it's not the worst, but does not look very good
+## s shaped curve - indicates shorter than normal tails - less variance than expected (kind of make sense)
+
+
+## kolmogorov-smirnov test, ks.test()
+ks.test(residuals(aov_60), pnorm, mean(residuals(aov_60)), sd(residuals(aov_60)))
+## p value = 0.43, not significant, good
+
+## shapiro-wilk test, shapiro.test()
+shapiro.test(residuals(aov_60))
+## p-value = 0.005751, significant, not that good
+
+
+## it seem really shit with the asssumptions, consider data transformation and maybe also trying mixed model
+##                      <- e.g. random effect of block
+
+
+
+
+
+
+## just double checking different data set
+chimp <- read.delim(file = 'Schmid_data2.txt')
+head(chimp)
+chimp_poisson = glm(chimp$Number_Looks ~ chimp$Condition)
+summary(chimp_poisson)
+plot(x=fitted(chimp_poisson), y=residuals(chimp_poisson), pch=19)
+
+
+
+
+
+
+vif(poisson_sim_data_pairAsPred)
+
+
+
+
+

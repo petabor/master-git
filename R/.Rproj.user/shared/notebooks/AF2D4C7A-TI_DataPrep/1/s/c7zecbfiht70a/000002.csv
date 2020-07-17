@@ -1,0 +1,11 @@
+"0","## applying the function = df_prem_middle_ts"
+"0","df_prem_middle_ts = fc_inf_premMiddle_ts(ts_tot_trim)"
+"2","`summarise()` regrouping output by 'pairType', 'condition', 'participant', 'trBlocks', 'letterPos1' (override with `.groups` argument)
+"
+"2","`summarise()` regrouping output by 'participant', 'condition', 'lettPos' (override with `.groups` argument)
+"
+"2","`summarise()` regrouping output by 'participant', 'condition', 'trBlocks' (override with `.groups` argument)
+"
+"2","Joining, by = c(""participant"", ""condition"", ""lettPos"", ""trBlocks"", ""tot"", ""n"", ""prop"", ""pairType"")
+"
+"0","head(df_prem_middle_ts)"

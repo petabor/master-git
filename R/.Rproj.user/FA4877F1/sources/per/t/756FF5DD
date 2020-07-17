@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1594747399726.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "756FF5DD",
+    "lastKnownWriteTime" : 7881138155400748902,
+    "last_content_update" : 1594747399726,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "7F0D885D",
+        "caption" : "df_prem_middle_ts_wide_avg",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=df_prem_middle_ts_wide_avg&cache_key=7F0D885D",
+        "displayedObservations" : "12",
+        "environment" : "",
+        "object" : "df_prem_middle_ts_wide_avg",
+        "preview" : "0",
+        "totalObservations" : "12",
+        "variables" : "4"
+    },
+    "relative_order" : 10,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

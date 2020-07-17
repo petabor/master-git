@@ -1,0 +1,5 @@
+"0","## applying the function = fc_deg_ts"
+"0","df_deg_ts = fc_deg_ts(ts_tot_trim)"
+"2","`summarise()` regrouping output by 'pairType', 'condition', 'participant' (override with `.groups` argument)
+"
+"0","head(df_deg_ts)"

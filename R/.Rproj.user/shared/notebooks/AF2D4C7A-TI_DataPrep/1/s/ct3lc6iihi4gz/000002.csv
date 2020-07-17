@@ -1,0 +1,31 @@
+"0","# install.packages(""knitr"")
+# install.packages(""devtools"")
+# install.packages(""here"")
+# install.packages(""tidyverse"")
+# devtools::install_github(""hadley/emo"")
+# install.packages(""viridis"")
+# devtools::install_github(""mikabr/ggpirate"")
+# install.packages(""afex"")
+# install.packages(""bootES"")
+# install.packages(""readr"")
+install.packages(""blockrand"")
+"
+"2","Installing package into ‘C:/Users/ibm/Documents/R/win-library/4.0’
+(as ‘lib’ is unspecified)
+"
+"2","trying URL 'https://cran.rstudio.com/bin/windows/contrib/4.0/blockrand_1.5.zip'
+"
+"2","Content type 'application/zip'"
+"2"," length 34784 bytes (33 KB)
+"
+"2","downloaded 33 KB
+
+"
+"1","package â€˜blockrandâ€™ successfully unpacked and MD5 sums checked
+"
+"1","
+"
+"1","The downloaded binary packages are in
+	C:\Users\ibm\AppData\Local\Temp\RtmpKExo18\downloaded_packages"
+"1","
+"

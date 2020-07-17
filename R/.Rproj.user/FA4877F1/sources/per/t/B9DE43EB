@@ -1,0 +1,24 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1593158192820.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "764156480",
+    "id" : "B9DE43EB",
+    "lastKnownWriteTime" : 1594674907,
+    "last_content_update" : 1594674907376,
+    "path" : "~/master-git/R/archive.R",
+    "project_path" : "archive.R",
+    "properties" : {
+        "cursorPosition" : "1083,0",
+        "scrollLine" : "0",
+        "source_window_id" : "",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 13,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

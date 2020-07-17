@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1594317120170.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "C366AF41",
+    "lastKnownWriteTime" : 1594317266,
+    "last_content_update" : 1594317266791,
+    "path" : "~/Results/R/Preregistration.Rmd",
+    "project_path" : "Preregistration.Rmd",
+    "properties" : {
+        "cursorPosition" : "92,107",
+        "scrollLine" : "0",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 8,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

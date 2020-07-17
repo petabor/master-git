@@ -1,0 +1,2 @@
+"0","## first outlook of outliers - simple boxplot"
+"0","plot(ts_first_selected$prop)"

@@ -1,0 +1,683 @@
+---
+title: "TI_Analysis"
+author: "Petra Borovska"
+date: "25 června 2020"
+output: 
+        html_document:
+        toc: true
+        toc_float:
+                collapsed: true
+                smooth_scroll: true
+        toc_depth: 3
+        number_sections: true
+        
+
+---
+
+## General Set Up
+
+
+### Cleaning
+
+clean environment and console
+
+```{r clean_console}
+cat("\014")
+```
+
+
+```{r clean_envir}
+rm(list = ls())
+```
+
+```{r setup_base, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r setup, include=FALSE}
+
+## install packages
+# install.packages("knitr")
+# install.packages("devtools")
+# install.packages("here")
+# install.packages("tidyverse")
+# devtools::install_github("hadley/emo")
+# install.packages("viridis")
+# devtools::install_github("mikabr/ggpirate")
+# install.packages("afex")
+# install.packages("bootES")
+# install.packages("ez")
+# install_github("rakosnicek/additivityTests")
+# install.packages("Rmisc")
+
+
+## load packages
+library(knitr)
+library(devtools)
+library(here)
+library(tidyverse)
+library(emo)
+library(viridis)
+library(ggpirate)
+library(afex)
+library(emmeans)
+library(multcomp)
+library(bootES)
+library(broom)
+library(ez)
+library(car)
+library(lsmeans)
+library(additivityTests)
+library(Rmisc)
+
+
+
+```
+
+
+# Overview
+
+1. Dataset handling: set up
+2. Looking at the data
+3. Descriptive Stats
+4. Model specification
+5. Data normalization/standardization
+6. Outlier handling
+7. Exclusion criteria
+8. Assumption 
+9. Post hoc
+
+
+
+
+### 1. Dataset handling: set up
+*replace the pilot data*
+
+
+
+```{r load_files}
+
+## loading clean data in long format
+
+## long format, clean, not subset
+tr_tot_trim = read.csv(here::here("outputFiles_R", "tr_tot_trim.csv"))
+ts_tot_trim = read.csv(here::here("outputFiles_R", "ts_tot_trim.csv"))
+
+## subests
+df_inf_prem_ts = read.csv(here::here("outputFiles_R", "df_inf_prem_ts.csv"))
+df_deg_ts = read.csv(here::here("outputFiles_R", "df_deg_ts.csv"))
+
+## simulated data
+myData = read.csv(here::here("outputFiles_R", "myData.csv"))
+
+```
+
+
+
+### Data prep for pilot
+Subseting pilot data, so I get 4 wake and 4 sleep participants with premise and inference collapsed over 1 deg and 2 deg
+
+Datasets:   
+pilot data = ***ts_first_selected***  
+simulated data = ***myData***  
+
+```{r balanced_pilot_dataset_select}
+
+## selecting participants, so it's balanced in conditions
+ts_first_selected =
+        df_inf_prem_ts %>%
+        filter(
+                participant == "7" | participant == "8" | participant == "18" |
+                        participant == "19" | participant == "17" | participant == "15" |
+                        participant == "20" | participant == "21"
+        )
+
+## change to factors
+ts_first_selected = 
+        ts_first_selected %>%
+        mutate(
+                pairType = as_factor(pairType),
+                participant = as_factor(participant),
+                condition = as_factor(condition)
+                )
+
+head(ts_first_selected)
+
+```
+
+
+**Simulated data**   
+More sensitive data. Used in simulation loop and also possible to use for assumptions checks, as a contrast to pilot data. 
+
+```{r sim_data}
+head(myData)
+```
+
+
+**The main models**
+
+*Pilot*
+
+```{r main_model_pilot}
+
+aov_pilot <- aov_ez(
+        "participant",
+        "prop",
+        data = ts_first_selected,
+        between = c("condition"),
+        within = c("pairType"),
+        type = 3
+)
+
+summary(aov_pilot)
+
+
+```
+
+*Simulation data*
+
+```{r main_model_simData}
+aov_simDat <- aov_ez(
+        "subject",
+        "perf",
+        data = myData,
+        between = c("condition"),
+        within = c("pairType"),
+        type = 3
+)
+
+
+```
+
+
+### 2. Looking at the data
+Basic data overview. How the measure look like.
+
+```{r basicOverview}
+
+## histogram of DV
+hist(ts_first_selected$prop)
+
+## basic summary of the dataset
+summary(ts_first_selected)
+
+## basic boxplots
+boxplot(ts_first_selected$prop ~ ts_first_selected$pairType)
+boxplot(ts_first_selected$prop ~ ts_first_selected$condition)
+
+
+```
+
+
+
+
+### 3. Descriptive Stats
+
+Looking at mean, sd, median, standar errors, min, max and ci's 
+
+```{r descriptive}
+
+
+
+## group by condition and pairType to see mean, median, sd, IQR
+pilot_groupSummary =
+        ts_first_selected %>%
+        group_by(
+                condition, 
+                pairType
+        ) %>%
+        dplyr::summarise(
+                n = n(),
+                mean = mean(prop),
+                median = median(prop), 
+                sd = sd(prop),
+                sem = sd/sqrt(n),
+                min = min(prop),
+                max = max(prop)
+                ) %>%
+        mutate(
+                lower.ci = mean - qt(1 - (0.5 / 2), n - 1) * sem,
+                upper.ci = mean + qt(1 - (0.5 / 2), n - 1) * sem
+        ) %>%
+        ungroup()
+
+pilot_groupSummary
+
+
+## look at SE, CI <- but it does not look good
+pilot_CI = summarySEwithin(
+        ts_first_selected, 
+        measurevar = "prop",
+        withinvars = "pairType",
+        betweenvars = "condition",
+        idvar = "participant", 
+        na.rm = FALSE,
+        conf.interval = .95
+        )
+
+```
+
+
+### Main Plot
+
+Plotting the pair type in conditions with CIs
+
+```{r closerLook}
+
+## ploting the proportion over pair type and condition - adjust based on what to look at
+pilot_Plot = ggplot(data = ts_first_selected, aes(x=pairType, y=prop))
+pilot_Plot + 
+        stat_summary(geom = "bar", position="dodge", colour = 'black',
+                     aes(fill=condition)) +
+        scale_fill_manual(values = c("lightblue", "grey")) + 
+        labs(title='Mean proportion in condition by pairType', x='pair type',
+             y='proportions', fill='condition') +
+        coord_cartesian(ylim=c(0.5, 1))
+
+
+## with CIs
+ggplot(pilot_groupSummary, aes(x=pairType, y=mean, fill=condition)) +
+    geom_bar(position=position_dodge(.9), colour="black", stat="identity") +
+    geom_errorbar(position=position_dodge(.9), width=.25, aes(ymin=lower.ci, ymax=upper.ci)) +
+    coord_cartesian(ylim=c(0,1)) +
+    scale_fill_manual(values=c("#CCCCCC","#FFFFFF")) +
+        labs(title='Mean proportion in condition by pairType', x='pair type',
+             y='proportions', fill='condition') +
+    scale_y_continuous(breaks=seq(1:100)) +
+    theme_bw() +
+    geom_hline(yintercept=38)
+
+
+
+```
+
+
+### 4. Model specification
+
+- ANOVA mixed: within + between
+
+
+- correlation: simple linear regression 
+(premise pair performance predicts middle inference pair performace)
+
+
+1. basic model - performance - 2 x 2  
+*Performance on inference pairs will be significantly higher in sleep condition vs. wake.*  
+```
+model = aov_ez(
+                "subject",
+                "perf",
+                data = myData,
+                between = c("condition"),
+                within = c("pairType")
+        )
+```        
+        DV performance
+        IV condition = sleep, wake
+        IV pairType = premise, inference
+  
+
+        
+2. performance and separation - 2 x 2 x 2      
+*Performance on inference pairs will be significantly higher in sleep condition vs. wake.*
+*Performance on 2 degree pairs increase after sleep vs. non sleep*
+```
+model = aov_ez(
+                "subject",
+                "perf",
+                data = myData,
+                between = c("condition"),
+                within = c("pairType", "separation")
+        )
+```        
+        DV performance
+        IV condition = sleep, wake
+        IV pairType = premise, inference
+        IV separation = 1 deg, 2 deg
+<- situation when premise equal in both conditions
+
+
+3. performance and separation - 2 x 4   
+*Performance on inference pairs will be significantly higher in sleep condition vs. wake.*
+*Performance on 2 degree pairs increase after sleep vs. non sleep*
+```
+model = aov_ez(
+                "subject",
+                "perf",
+                data = myData,
+                between = c("condition"),
+                within = c("pairType_Sep")
+        )
+```        
+        DV performance
+        IV condition = sleep, wake
+        IV pairType_Sep = premise, inference, 1 deg, 2 deg
+<- situation when premise not equal in both condition 
+
+
+
+4. response time   
+*Response time decreases after sleep vs. non sleep*
+```
+model = aov_ez(
+                "subject",
+                "rt",
+                data = myData,
+                between = c("condition"),
+                within = c("pairType")
+        )
+```        
+        DV performance
+        IV condition = sleep, wake
+        IV pairType = premise, inference
+
+
+
+5. response time and separation - 2 x 2 x 2   
+*Response time decreases after sleep vs. non sleep*
+*Response time is higher in more distant pairs vs. less distant pairs*
+```
+model = aov_ez(
+                "subject",
+                "rt",
+                data = myData,
+                between = c("condition"),
+                within = c("pairType", "separation")
+        )
+```        
+        DV response time
+        IV condition = sleep, wake
+        IV pairType = premise, inference
+        IV separation = 1 deg, 2 deg
+<- situation when premise equal in both conditions
+
+
+
+6. response time and separation - 2 x 4   
+*Response time decreases after sleep vs. non sleep*
+*Response time is higher in more distant pairs vs. less distant pairs*
+```
+model = aov_ez(
+                "subject",
+                "rt",
+                data = myData,
+                between = c("condition"),
+                within = c("pairType_Sep")
+        )
+```        
+        DV response time
+        IV condition = sleep, wake
+        IV pairType_Sep = premise, inference, 1 deg, 2 deg
+<- situation when premise not equal in both condition 
+
+
+7. correlation    
+*Premise pairs correlate with inference pairs*
+
+performance on middle premise pairs with middle inference pairs
+        
+        bivariate regression analysis
+                y(inferencePair) = b*x(premisePair) + a
+        
+        oneDeg B>C + C>D       = B>D
+        oneDeg C>D + D>E       = C>E
+        twoDeg B>C + C>D + D>E = BE
+
+
+
+
+### 5. Data standardization/normalization
+
+***Definitions***
+[Link](https://towardsai.net/p/data-science/how-when-and-why-should-you-normalize-standardize-rescale-your-data-3f083def38ff)
+
+**Rescaling**
+= a vector means to add or subtract a constant and then multiply or divide by a constant, as you would do to change the units of measurement of the data, for example, to convert a temperature from Celsius to Fahrenheit.
+```
+scale(x, center = TRUE, scale = TRUE)
+
+```
+
+**Normalization**
+= a vector most often means dividing by a norm of the vector. It also often refers to rescaling by the minimum and range of the vector, to make all the elements lie between 0 and 1 thus bringing all the values of numeric columns in the dataset to a common scale.
+```
+normalize(x, method = "standardize", range = c(0, 1), margin = 1L, on.constant = "quiet")
+```
+
+**Standardization**
+= a vector most often means subtracting a measure of location and dividing by a measure of scale. For example, if the vector contains random values with a Gaussian distribution, you might subtract the mean and divide by the standard deviation, thereby obtaining a “standard normal” random variable with mean 0 and standard deviation 1.
+```
+scale(x, center = TRUE, scale = TRUE)
+
+```
+
+
+
+** Probably using normalization when the data are not normally distributed.**
+
+
+
+### 6. Outlier handling
+
+```{r outlierHandling, message=FALSE, error=FALSE}
+
+## first outlook of outliers - simple plots
+plot(ts_first_selected$prop)
+boxplot(ts_first_selected$prop ~ ts_first_selected$pairType)
+boxplot(ts_first_selected$prop ~ ts_first_selected$condition)
+
+## cook distance for looking at outliers
+## if the distance is for times higher from the mean, than consider to be outlier
+outL = lm(prop ~ ., data = ts_first_selected)
+cook = cooks.distance(outL)
+meanCook = mean(cook)
+
+## observation that have a cook's distance greater than 4 times the mean - influential
+plot(cook, pch="*", cex=2, main="Influential Obs by Cooks distance")  # plot cook's distance
+abline(h = 4*mean(cook, na.rm=T), col="red")  # add cutoff line
+text(x=1:length(cook)+1, y=cook, pos=2, labels=ifelse(cook>4*mean(cook, na.rm=T),names(cook),""), col="red")  # add labels, gives me back number of outlier
+
+## extract the rows with influential cases
+influential <- as.numeric(names(cook)[(cook > 4*mean(cook, na.rm=T))])
+influential
+ts_first_selected[influential, ]
+
+## use also test for most extreme observation based on the given model
+car::outlierTest(outL)
+
+
+```
+
+
+
+
+### 7. Exclusion Criteria
+
+Will be specified after children pilot.    
+For now:    
+more than 30 blocks of training.  
+outliers ?? how to handle still open
+
+
+
+
+### 8. Assumptions for ANOVA   
+               
+               
+1. independence of observations - except of within condition   
+
+2. dv should be at interval level - continuous  
+        <- question how to handle exactly proportion 
+        
+3. homogeneity of variance - homoscedasticity:  
+        - visual check - fitted ~ residuals <- no pattern  
+        - Levene test <- leveneTest(dv ~ condition) - should not be sign                                   (null - the groups had equal population variance) 
+        
+4. normality of residuals 
+        - visual check - plot residuals
+        ```
+        hist(x=seq(from=min(residuals(twoway)), to=max(residuals(twoway)), length.out=100)lines(x=x, y=dnorm(x, mean=0,sd=sd(residuals(twoway)))))   
+        ```   
+        - the residuals should float evently around 0, not creating any obvious pattern
+        - QQ plot: ***qqnorm(residuals())**, ***qqline(residuals())***  
+        - kolmogorov-smirnov test, ***ks.test()*** - should not be sign   
+                        <- are both from same distribution  
+        - shapiro-wilk test, ***shapiro.test()*** - should not be sign
+                        <- whether normal distributed
+                       
+5. sphericity - just for within anova   
+        = homogeneity of variance between in conditions that are compared to each other  
+        = in within conditions - those should have similar variances, vialoation is serious         for repeated measures, so then later when comparison between 1 deg, 2 deg, prem - 
+        if it's gonna be done, still not sure, maybe 1 deg and 2 deg alone enough   
+        <- not necessary when only two way comparisons - then there is 
+        not much to be compared to, comparison possible only with 3 and more groups
+        
+
+
+
+**Homogeneity of variance - homoscedasticity**
+Looking at fitted values against residuals. No pattern should be visible.   
+Consider number of observation when looking at the plot. With pilot data probably strange patterns due to small number of observations.
+
+```{r homogeneity, message=FALSE, error=FALSE}
+
+## VISUAL CHECK
+
+## two ways where to get residuals and fitted values
+
+## from aov_ez
+plot(aov_pilot$lm$residuals ~ aov_pilot$lm$fitted.values, main="Pilot: Residuals vs fitted values")
+abline(h=0)
+
+## residual, fitted.values commands <- same plots
+plot(residuals(aov_pilot) ~ fitted.values(aov_pilot), main="Residuals vs fitted: double check")
+abline(h=0)
+
+## look at simulated data residuals vs fitted
+plot(aov_simDat$lm$residuals ~ aov_simDat$lm$fitted.values, main="Sim data: residuals vs fitted")
+abline(h=0)
+
+## FORMAL TESTS
+
+## levenetest
+test_levene(aov_pilot, center = mean) ## not significant is good
+
+
+## running the model only with condition and specifying an error, should be same as above
+btw1 = aov_car(
+        prop ~ condition + Error(participant), data = ts_first_selected
+)
+
+## levene test only on between condition - which is condition
+test_levene(btw1)
+
+
+```
+
+
+**Normality**
+
+```{r normality, message=FALSE, error=FALSE}
+
+## VISUAL CHECKS
+
+## look at raw values of fitted values, residuals and actual data
+cbind(fitted.values(aov_pilot), residuals(aov_pilot), ts_first_selected$prop)
+
+## visual check
+hist(residuals(aov_pilot), probability = T)
+## add line
+x = seq(from=min(residuals(aov_pilot)), to=max(residuals(aov_pilot)), length.out = 100)
+lines(x=x, y=dnorm(x, mean = 0, sd=sd(residuals(aov_pilot))))
+
+## look at linearity of residuals
+qqnorm(residuals(aov_pilot))   ## should follow the line
+qqline(residuals(aov_pilot))
+
+
+## FORMAL CHECKS
+
+## shapiro wilk test
+shapiro.test(residuals(aov_pilot)) ## should not be sign
+
+
+```
+
+
+
+### 9. Post hoc test
+
+lsmeans multiple comparison between groups, if balanced then the means should match reality
+
+commands
+
+compar = lsmeans(anova_model, specs = c("betweenCondition")) or possibly also within
+contrast(compar, method = "pairwise")   
+
+<- adjust for bonferroni correct for multiple comparisons
+- it correct for more hypothesis in use, with relation to alpha level - which then becomes more strict
+
+
+
+```{r postHoc}
+
+## lsmeans
+grid = lsmeans(aov_pilot, specs=c("condition", "pairType"))
+
+
+grid_plot = as.data.frame(summary(grid))
+pd <- position_dodge(0.1)
+g4 <- ggplot(grid_plot, aes(x=factor(condition, level=c('wake', 'sleep')), y=lsmean,group=pairType,colour=pairType))+
+ geom_errorbar(aes(ymin=lsmean-SE, ymax=lsmean+SE), width=.1,position=pd) +
+   geom_line(position=pd)+
+   geom_point(position=pd)+theme_classic()+
+        labs(x="Condition", y="Mean")
+print(g4)
+
+
+## pairwise comparisons
+compar = lsmeans(aov_pilot, specs = c("condition"))
+
+## pairwise
+contrast(compar, method = "pairwise")   ## adjusted for tukey method
+
+## bonferroni
+contrast(compar, method = "pairwise", adjust = "bonferroni")
+
+## all pairwise comparison within each level of pairType
+meansGrid2 = lsmeans(aov_pilot, ~condition|pairType)
+
+compar_2 = contrast(meansGrid2, method="pairwise")
+summary(compar_2)
+
+## adjustment
+summary(compar_2, by=NULL, adjus="holm")
+
+
+sum_aov_pilot = summary(aov_pilot)
+
+
+
+```
+
+
+
+### Linear Regression
+
+```{r lm_separation}
+head(df_inf_prem_ts)
+
+
+
+lm_sep = lm()
+
+```
+
+
+
+
+
+
+
+

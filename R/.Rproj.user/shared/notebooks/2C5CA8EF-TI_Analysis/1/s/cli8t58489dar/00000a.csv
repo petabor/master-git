@@ -1,0 +1,2 @@
+"0","## look at simulated data residuals vs fitted"
+"0","plot(aov_simDat$lm$residuals ~ aov_simDat$lm$fitted.values, main=""Sim data: residuals vs fitted"")"

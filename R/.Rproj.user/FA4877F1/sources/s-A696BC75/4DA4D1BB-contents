@@ -1,0 +1,116 @@
+---
+title: "data_sim_petra"
+author: "Jacob Bellmund"
+date: "6/26/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load packages
+
+```{r packages}
+## load packages
+library(knitr)
+library(devtools)
+library(here)
+library(tidyverse)
+library(emo)
+library(viridis)
+library(ggpirate)
+library(afex)
+library(emmeans)
+library(multcomp)
+library(bootES)
+library(broom)
+library(readr)
+```
+
+## Simulate one data frame
+
+This would have to be done for each simulation
+
+
+```{r get some data}
+
+# some params
+n_subs <- 40
+n_groups <- 2
+conds <- c("premise", "inference")
+n_conds <- length(conds)
+
+# start with subject variable and convert it to factor
+dat <- tibble(subject = rep(1:n_subs, each = n_conds))
+
+# add more columns
+dat <- dat %>% add_column(
+  # add group variable
+  group = rep(c("wake", "sleep"), each = (n_subs/n_groups)*n_conds),
+  # add condition variable (trial type)
+  cond = rep(conds, n_subs)
+  )
+
+# convert to factor
+dat<- dat %>% mutate(
+  subject = as.factor(subject),
+  group = as.factor(group),
+  cond = as.factor(cond)
+)
+
+# add percent correct 
+dat <- dat %>% add_column(
+  # for now the simplest case: uniform between 0 and 1
+  perc_corr = runif(n_subs*n_conds)
+)
+
+
+```
+
+## Run the analysis
+
+Start with the simplest case: a mixed ANOVA with 2 factors:
+
+- group (between subjects)
+- conditions (within subject)
+
+```{r}
+
+fit <- aov_ez(
+  "subject",
+  "perc_corr",
+  data = dat,
+  between=c("group"),
+  within=c("cond"))
+
+fit
+```
+
+
+
+## My version with measure around 0.75
+
+
+```{r prepare_data}
+
+myData =  tibble(subject = rep(1:40))
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

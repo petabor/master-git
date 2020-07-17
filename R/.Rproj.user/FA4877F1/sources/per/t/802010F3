@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1593689761055.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2351942527",
+    "id" : "802010F3",
+    "lastKnownWriteTime" : 1594639509,
+    "last_content_update" : 1594639509153,
+    "path" : "~/master-git/R/TI_Simulation.Rmd",
+    "project_path" : "TI_Simulation.Rmd",
+    "properties" : {
+        "cursorPosition" : "225,18",
+        "docOutlineVisible" : "0",
+        "last_setup_crc32" : "",
+        "scrollLine" : "0",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 7,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

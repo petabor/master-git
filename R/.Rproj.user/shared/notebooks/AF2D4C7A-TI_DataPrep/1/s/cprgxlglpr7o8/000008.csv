@@ -1,0 +1,50 @@
+"0","## get rid of irrelevant columns
+temp =
+        ts_tot_trim %>%
+        dplyr::select(
+                key_resp_test.corr, pairType, participant, condition, trBlocks
+        ) 
+## calculate proportions
+temp = 
+        temp %>%
+        group_by(
+                pairType,
+                condition,
+                participant,
+                trBlocks
+                
+        ) %>% 
+        dplyr::summarise(
+                tot = sum(key_resp_test.corr),
+                n = n()
+        ) %>%
+        mutate(
+                prop = tot/n
+        ) %>%
+        ungroup()
+"
+"2","`summarise()` regrouping output by 'pairType', 'condition', 'participant' (override with `.groups` argument)
+"
+"0","## drop not useful columns"
+"0","temp ="
+"0","        temp %>%"
+"0","        filter("
+"0","                pairType != ""anchor"""
+"0","        )"
+"0","## colapse inference "
+"0","temp ="
+"0","        temp %>%"
+"0","        filter("
+"0","                pairType == ""oneDegree"" | pairType == ""twoDegree"""
+"0","        ) %>%"
+"0","        group_by("
+"0","                participant,"
+"0","                condition, "
+"0","                trBlocks"
+"0","        ) %>%"
+"0","        dplyr::summarise("
+"0","                tot = sum(tot),"
+"0","                n = sum(n)"
+"0","        )"
+"2","`summarise()` regrouping output by 'participant', 'condition' (override with `.groups` argument)
+"

@@ -1,0 +1,7 @@
+"0","tokenFile = read.csv(""C:/Users/ibm/Documents/Results/listOfParticipants_token&URLs.csv"")"
+"0","tokenFile_sel = "
+"0","        tokenFile %>%"
+"0","        dplyr::select("
+"0","                token_LS,"
+"0","                Condition"
+"0","                )"

@@ -1,0 +1,8 @@
+"0","w_inf = rnorm(100, desc_stat_both$mean[1], desc_stat_both$sd[1])"
+"0","w_inf_range = sample(w_inf[w_inf >=0 & w_inf <=1], 10)"
+"0","w_prem = rnorm(100, desc_stat_both$mean[2], desc_stat_both$sd[2])"
+"0","w_prem_range = sample(w_prem[w_prem >=0 & w_prem <=1], 10)"
+"0","s_inf = rnorm(100, desc_stat_both$mean[3], desc_stat_both$sd[3])"
+"0","s_inf_range = sample(s_inf[s_inf >=0 & s_inf <=1], 10)"
+"0","s_prem = rnorm(100, desc_stat_both$mean[4], desc_stat_both$sd[4])"
+"0","s_prem_range = sample(s_prem[s_prem >=0 & s_prem <=1], 10)"

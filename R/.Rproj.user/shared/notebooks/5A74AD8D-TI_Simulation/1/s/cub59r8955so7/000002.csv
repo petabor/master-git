@@ -1,0 +1,8 @@
+"0","## loading clean data in long format"
+"0","# clean, not subset"
+"0","tr_tot_trim = read.csv(here(""outputFiles_R"", ""tr_tot_trim.csv""))"
+"0","ts_tot_trim = read.csv(here(""outputFiles_R"", ""ts_tot_trim.csv""))"
+"0","# premise and inference subset"
+"0","df_inf_prem_ts = read.csv(here::here(""outputFiles_R"", ""df_inf_prem_ts.csv""))"
+"0","# separation subset"
+"0","df_deg_ts = read.csv(here::here(""outputFiles_R"", ""df_deg_ts.csv""))"

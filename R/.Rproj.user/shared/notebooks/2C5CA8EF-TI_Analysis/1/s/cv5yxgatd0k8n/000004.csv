@@ -1,0 +1,2 @@
+"0","## histogram of DV"
+"0","hist(ts_first_selected$prop)"
